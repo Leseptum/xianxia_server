@@ -1,0 +1,217 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0/wasi-wasm",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {},
+    ".NETCoreApp,Version=v8.0/wasi-wasm": {
+      "StdbModule/1.0.0": {
+        "dependencies": {
+          "Microsoft.NET.ILLink.Tasks": "8.0.0",
+          "SpacetimeDB.Runtime": "2.3.0",
+          "runtimepack.Microsoft.NETCore.App.Runtime.Mono.wasi-wasm": "8.0.0"
+        },
+        "runtime": {
+          "StdbModule.dll": {}
+        }
+      },
+      "runtimepack.Microsoft.NETCore.App.Runtime.Mono.wasi-wasm/8.0.0": {
+        "runtime": {
+          "System.Linq.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          },
+          "System.Memory.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          },
+          "System.Runtime.Numerics.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          },
+          "System.Runtime.Serialization.Primitives.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          },
+          "System.Text.Json.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          }
+        },
+        "native": {
+          "System.Private.CoreLib.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
+          },
+          "dotnet.wasm": {
+            "fileVersion": "0.0.0.0"
+          },
+          "icudt.dat": {
+            "fileVersion": "0.0.0.0"
+          },
+          "icudt_CJK.dat": {
+            "fileVersion": "0.0.0.0"
+          },
+          "icudt_EFIGS.dat": {
+            "fileVersion": "0.0.0.0"
+          },
+          "icudt_hybrid.dat": {
+            "fileVersion": "0.0.0.0"
+          },
+          "icudt_no_CJK.dat": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libSystem.Globalization.Native.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libSystem.IO.Compression.Native.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libSystem.Native.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libicudata.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libicui18n.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libicuuc.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-debugger-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-debugger-stub-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-diagnostics_tracing-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-diagnostics_tracing-stub-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-hot_reload-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-hot_reload-stub-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-marshal-ilgen-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-component-marshal-ilgen-stub-static.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-ee-interp.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-icall-table.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-wasm-nosimd.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmono-wasm-simd.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "libmonosgen-2.0.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "wasm-bundled-timezones.a": {
+            "fileVersion": "0.0.0.0"
+          },
+          "driver.h": {
+            "fileVersion": "0.0.0.0"
+          },
+          "gc-common.h": {
+            "fileVersion": "0.0.0.0"
+          },
+          "pinvoke.h": {
+            "fileVersion": "0.0.0.0"
+          },
+          "wasm-config.h": {
+            "fileVersion": "0.0.0.0"
+          },
+          "driver.c": {
+            "fileVersion": "0.0.0.0"
+          },
+          "main.c": {
+            "fileVersion": "0.0.0.0"
+          },
+          "pinvoke.c": {
+            "fileVersion": "0.0.0.0"
+          },
+          "stubs.c": {
+            "fileVersion": "0.0.0.0"
+          },
+          "synthetic-pthread.c": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.NET.ILLink.Tasks/8.0.0": {},
+      "SpacetimeDB.BSATN.Runtime/2.3.0": {
+        "runtime": {
+          "lib/net8.0/SpacetimeDB.BSATN.Runtime.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "SpacetimeDB.Runtime/2.3.0": {
+        "dependencies": {
+          "SpacetimeDB.BSATN.Runtime": "2.3.0"
+        },
+        "runtime": {
+          "lib/net8.0/SpacetimeDB.Runtime.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "StdbModule/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "runtimepack.Microsoft.NETCore.App.Runtime.Mono.wasi-wasm/8.0.0": {
+      "type": "runtimepack",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.NET.ILLink.Tasks/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-B3etT5XQ2nlWkZGO2m/ytDYrOmSsQG1XNBaM6ZYlX5Ch/tDrMFadr0/mK6gjZwaQc55g+5+WZMw4Cz3m8VEF7g==",
+      "path": "microsoft.net.illink.tasks/8.0.0",
+      "hashPath": "microsoft.net.illink.tasks.8.0.0.nupkg.sha512"
+    },
+    "SpacetimeDB.BSATN.Runtime/2.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-cb6htPjerh7CaNAyOxq42UaRv+lwr5dEH6tw4s6tsfQSvMweuI1aIQt46kOWGTNYg7dqxLn2JPQ185QtpLJAtQ==",
+      "path": "spacetimedb.bsatn.runtime/2.3.0",
+      "hashPath": "spacetimedb.bsatn.runtime.2.3.0.nupkg.sha512"
+    },
+    "SpacetimeDB.Runtime/2.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-G33Wur2IkZZieTG1kPOOMpP1ml1gcfvBwbRVCHvKN783Tp8/+NahEwB8mupuMw8oik1k/sSVNqKLZ4y05tNRSQ==",
+      "path": "spacetimedb.runtime/2.3.0",
+      "hashPath": "spacetimedb.runtime.2.3.0.nupkg.sha512"
+    }
+  },
+  "runtimes": {
+    "wasi-wasm": [
+      "wasi",
+      "any",
+      "base"
+    ]
+  }
+}

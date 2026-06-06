@@ -1,0 +1,421 @@
+// GENERATED FILE, DO NOT MODIFY
+
+int bytes_sink_write (int,int,int);
+int bytes_source_read (int,int,int);
+int bytes_source_remaining_length (int,int);
+int CompressionNative_Crc32 (int,int,int);
+int CompressionNative_Deflate (int,int);
+int CompressionNative_DeflateEnd (int);
+int CompressionNative_DeflateInit2_ (int,int,int,int,int,int);
+int CompressionNative_Inflate (int,int);
+int CompressionNative_InflateEnd (int);
+int CompressionNative_InflateInit2_ (int,int);
+void console_log (int,int,int,int,int,int,int,int);
+int console_timer_end (int);
+int console_timer_start (int,int);
+int datastore_clear (int,int);
+int datastore_delete_all_by_eq_bsatn (int,int,int,int);
+int datastore_delete_by_index_scan_point_bsatn (int,int,int,int);
+int datastore_delete_by_index_scan_range_bsatn (int,int,int,int,int,int,int,int,int);
+int datastore_index_scan_point_bsatn (int,int,int,int);
+int datastore_index_scan_range_bsatn (int,int,int,int,int,int,int,int,int);
+int datastore_insert_bsatn (int,int,int);
+int datastore_table_row_count (int,int);
+int datastore_table_scan_bsatn (int,int);
+int datastore_update_bsatn (int,int,int,int);
+int get_jwt (int,int);
+void GlobalizationNative_ChangeCase (int,int,int,int,int);
+void GlobalizationNative_ChangeCaseInvariant (int,int,int,int,int);
+void GlobalizationNative_ChangeCaseTurkish (int,int,int,int,int);
+void GlobalizationNative_CloseSortHandle (int);
+int GlobalizationNative_CompareString (int,int,int,int,int,int);
+int GlobalizationNative_EndsWith (int,int,int,int,int,int,int);
+int GlobalizationNative_EnumCalendarInfo (int,int,int,int,int);
+int GlobalizationNative_GetCalendarInfo (int,int,int,int,int);
+int GlobalizationNative_GetCalendars (int,int,int);
+int GlobalizationNative_GetDefaultLocaleName (int,int);
+int GlobalizationNative_GetICUVersion ();
+int GlobalizationNative_GetJapaneseEraStartDate (int,int,int,int);
+int GlobalizationNative_GetLatestJapaneseEra ();
+int GlobalizationNative_GetLocaleInfoGroupingSizes (int,int,int,int);
+int GlobalizationNative_GetLocaleInfoInt (int,int,int);
+int GlobalizationNative_GetLocaleInfoString (int,int,int,int,int);
+int GlobalizationNative_GetLocaleName (int,int,int);
+int GlobalizationNative_GetLocales (int,int);
+int GlobalizationNative_GetLocaleTimeFormat (int,int,int,int);
+int GlobalizationNative_GetSortHandle (int,int);
+int GlobalizationNative_GetSortKey (int,int,int,int,int,int);
+int GlobalizationNative_GetSortVersion (int);
+int GlobalizationNative_IndexOf (int,int,int,int,int,int,int);
+void GlobalizationNative_InitICUFunctions (int,int,int,int);
+void GlobalizationNative_InitOrdinalCasingPage (int,int);
+int GlobalizationNative_IsNormalized (int,int,int);
+int GlobalizationNative_IsPredefinedLocale (int);
+int GlobalizationNative_LastIndexOf (int,int,int,int,int,int,int);
+int GlobalizationNative_LoadICU ();
+int GlobalizationNative_NormalizeString (int,int,int,int,int);
+int GlobalizationNative_StartsWith (int,int,int,int,int,int,int);
+int GlobalizationNative_ToAscii (int,int,int,int,int);
+int GlobalizationNative_ToUnicode (int,int,int,int,int);
+void identity (int);
+int index_id_from_name (int,int,int);
+int procedure_abort_mut_tx ();
+int procedure_commit_mut_tx ();
+int procedure_http_request (int,int,int,int,int);
+int procedure_start_mut_tx (int);
+int row_iter_bsatn_advance (int,int,int);
+int row_iter_bsatn_close (int);
+int SystemNative_Access (int,int);
+int SystemNative_AlignedAlloc (int,int);
+void SystemNative_AlignedFree (int);
+int SystemNative_AlignedRealloc (int,int,int);
+int SystemNative_Calloc (int,int);
+int SystemNative_CanGetHiddenFlag ();
+int SystemNative_ChDir (int);
+int SystemNative_ChMod (int,int);
+int SystemNative_Close (int);
+int SystemNative_CloseDir (int);
+int SystemNative_ConvertErrorPalToPlatform (int);
+int SystemNative_ConvertErrorPlatformToPal (int);
+int SystemNative_CopyFile (int,int,int64_t);
+int SystemNative_FAllocate (int,int64_t,int64_t);
+int SystemNative_FChflags (int,int);
+int SystemNative_FChMod (int,int);
+int SystemNative_FLock (int,int);
+void SystemNative_Free (int);
+void SystemNative_FreeEnviron (int);
+int SystemNative_FStat (int,int);
+int SystemNative_FSync (int);
+int SystemNative_FTruncate (int,int64_t);
+int SystemNative_FUTimens (int,int);
+int SystemNative_GetAddressFamily (int,int,int);
+double SystemNative_GetCpuUtilization (int);
+int SystemNative_GetCwd (int,int);
+int SystemNative_GetDefaultSearchOrderPseudoHandle ();
+int SystemNative_GetEnv (int);
+int SystemNative_GetEnviron ();
+int SystemNative_GetErrNo ();
+int SystemNative_GetFileSystemType (int);
+int SystemNative_GetIPv4Address (int,int,int);
+int SystemNative_GetIPv6Address (int,int,int,int,int);
+void SystemNative_GetNonCryptographicallySecureRandomBytes (int,int);
+int SystemNative_GetPort (int,int,int);
+int SystemNative_GetReadDirRBufferSize ();
+int SystemNative_GetSocketAddressSizes (int,int,int,int);
+int64_t SystemNative_GetSystemTimeAsTicks ();
+uint64_t SystemNative_GetTimestamp ();
+int SystemNative_GetTimeZoneData (int,int);
+int SystemNative_LChflags (int,int);
+int SystemNative_LChflagsCanSetHiddenFlag ();
+int SystemNative_Link (int,int);
+int SystemNative_LockFileRegion (int,int64_t,int64_t,int);
+void SystemNative_Log (int,int);
+void SystemNative_LogError (int,int);
+void SystemNative_LowLevelMonitor_Acquire (int);
+int SystemNative_LowLevelMonitor_Create ();
+void SystemNative_LowLevelMonitor_Destroy (int);
+void SystemNative_LowLevelMonitor_Release (int);
+void SystemNative_LowLevelMonitor_Signal_Release (int);
+int SystemNative_LowLevelMonitor_TimedWait (int,int);
+void SystemNative_LowLevelMonitor_Wait (int);
+int64_t SystemNative_LSeek (int,int64_t,int);
+int SystemNative_LStat (int,int);
+int SystemNative_Malloc (int);
+int SystemNative_MkDir (int,int);
+int SystemNative_MkdTemp (int);
+int SystemNative_MksTemps (int,int);
+int SystemNative_Open (int,int,int);
+int SystemNative_OpenDir (int);
+int SystemNative_Poll (int,int,int,int);
+int SystemNative_PosixFAdvise (int,int64_t,int64_t,int);
+int SystemNative_PRead (int,int,int,int64_t);
+int64_t SystemNative_PReadV (int,int,int,int64_t);
+int SystemNative_PWrite (int,int,int,int64_t);
+int64_t SystemNative_PWriteV (int,int,int,int64_t);
+int SystemNative_Read (int,int,int);
+int SystemNative_ReadDirR (int,int,int,int);
+int SystemNative_ReadLink (int,int,int);
+int SystemNative_Realloc (int,int);
+int SystemNative_Rename (int,int);
+int SystemNative_RmDir (int);
+int SystemNative_SchedGetCpu ();
+int SystemNative_SetAddressFamily (int,int,int);
+void SystemNative_SetErrNo (int);
+int SystemNative_SetIPv4Address (int,int,int);
+int SystemNative_SetIPv6Address (int,int,int,int,int);
+int SystemNative_SetPort (int,int,int);
+int SystemNative_Stat (int,int);
+int SystemNative_StrErrorR (int,int,int);
+int SystemNative_SymLink (int,int);
+int64_t SystemNative_SysConf (int);
+void SystemNative_SysLog (int,int,int);
+int SystemNative_Unlink (int);
+int SystemNative_UTimensat (int,int);
+int SystemNative_Write (int,int,int);
+int table_id_from_name (int,int,int);
+void volatile_nonatomic_schedule_immediate (int,int,int,int);
+static PinvokeImport bindings_imports [] = {
+{"bytes_sink_write", bytes_sink_write}, // SpacetimeDB.Runtime
+{"bytes_source_read", bytes_source_read}, // SpacetimeDB.Runtime
+{"bytes_source_remaining_length", bytes_source_remaining_length}, // SpacetimeDB.Runtime
+{"console_log", console_log}, // SpacetimeDB.Runtime
+{"console_timer_end", console_timer_end}, // SpacetimeDB.Runtime
+{"console_timer_start", console_timer_start}, // SpacetimeDB.Runtime
+{"datastore_clear", datastore_clear}, // SpacetimeDB.Runtime
+{"datastore_delete_all_by_eq_bsatn", datastore_delete_all_by_eq_bsatn}, // SpacetimeDB.Runtime
+{"datastore_delete_by_index_scan_point_bsatn", datastore_delete_by_index_scan_point_bsatn}, // SpacetimeDB.Runtime
+{"datastore_delete_by_index_scan_range_bsatn", datastore_delete_by_index_scan_range_bsatn}, // SpacetimeDB.Runtime
+{"datastore_index_scan_point_bsatn", datastore_index_scan_point_bsatn}, // SpacetimeDB.Runtime
+{"datastore_index_scan_range_bsatn", datastore_index_scan_range_bsatn}, // SpacetimeDB.Runtime
+{"datastore_insert_bsatn", datastore_insert_bsatn}, // SpacetimeDB.Runtime
+{"datastore_table_row_count", datastore_table_row_count}, // SpacetimeDB.Runtime
+{"datastore_table_scan_bsatn", datastore_table_scan_bsatn}, // SpacetimeDB.Runtime
+{"datastore_update_bsatn", datastore_update_bsatn}, // SpacetimeDB.Runtime
+{"get_jwt", get_jwt}, // SpacetimeDB.Runtime
+{"identity", identity}, // SpacetimeDB.Runtime
+{"index_id_from_name", index_id_from_name}, // SpacetimeDB.Runtime
+{"procedure_abort_mut_tx", procedure_abort_mut_tx}, // SpacetimeDB.Runtime
+{"procedure_commit_mut_tx", procedure_commit_mut_tx}, // SpacetimeDB.Runtime
+{"procedure_http_request", procedure_http_request}, // SpacetimeDB.Runtime
+{"procedure_start_mut_tx", procedure_start_mut_tx}, // SpacetimeDB.Runtime
+{"row_iter_bsatn_advance", row_iter_bsatn_advance}, // SpacetimeDB.Runtime
+{"row_iter_bsatn_close", row_iter_bsatn_close}, // SpacetimeDB.Runtime
+{"table_id_from_name", table_id_from_name}, // SpacetimeDB.Runtime
+{"volatile_nonatomic_schedule_immediate", volatile_nonatomic_schedule_immediate}, // SpacetimeDB.Runtime
+{NULL, NULL}
+};
+static PinvokeImport libicudata_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libicui18n_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libicuuc_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_debugger_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_debugger_stub_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_diagnostics_tracing_stub_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_hot_reload_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_hot_reload_stub_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_marshal_ilgen_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_component_marshal_ilgen_stub_static_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_ee_interp_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_icall_table_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmono_wasm_nosimd_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libmonosgen_2_0_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libSystem_Globalization_Native_imports [] = {
+{"GlobalizationNative_ChangeCase", GlobalizationNative_ChangeCase}, // System.Private.CoreLib
+{"GlobalizationNative_ChangeCaseInvariant", GlobalizationNative_ChangeCaseInvariant}, // System.Private.CoreLib
+{"GlobalizationNative_ChangeCaseTurkish", GlobalizationNative_ChangeCaseTurkish}, // System.Private.CoreLib
+{"GlobalizationNative_CloseSortHandle", GlobalizationNative_CloseSortHandle}, // System.Private.CoreLib
+{"GlobalizationNative_CompareString", GlobalizationNative_CompareString}, // System.Private.CoreLib
+{"GlobalizationNative_EndsWith", GlobalizationNative_EndsWith}, // System.Private.CoreLib
+{"GlobalizationNative_EnumCalendarInfo", GlobalizationNative_EnumCalendarInfo}, // System.Private.CoreLib
+{"GlobalizationNative_GetCalendarInfo", GlobalizationNative_GetCalendarInfo}, // System.Private.CoreLib
+{"GlobalizationNative_GetCalendars", GlobalizationNative_GetCalendars}, // System.Private.CoreLib
+{"GlobalizationNative_GetDefaultLocaleName", GlobalizationNative_GetDefaultLocaleName}, // System.Private.CoreLib
+{"GlobalizationNative_GetICUVersion", GlobalizationNative_GetICUVersion}, // System.Private.CoreLib
+{"GlobalizationNative_GetJapaneseEraStartDate", GlobalizationNative_GetJapaneseEraStartDate}, // System.Private.CoreLib
+{"GlobalizationNative_GetLatestJapaneseEra", GlobalizationNative_GetLatestJapaneseEra}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocaleInfoGroupingSizes", GlobalizationNative_GetLocaleInfoGroupingSizes}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocaleInfoInt", GlobalizationNative_GetLocaleInfoInt}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocaleInfoString", GlobalizationNative_GetLocaleInfoString}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocaleName", GlobalizationNative_GetLocaleName}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocales", GlobalizationNative_GetLocales}, // System.Private.CoreLib
+{"GlobalizationNative_GetLocaleTimeFormat", GlobalizationNative_GetLocaleTimeFormat}, // System.Private.CoreLib
+{"GlobalizationNative_GetSortHandle", GlobalizationNative_GetSortHandle}, // System.Private.CoreLib
+{"GlobalizationNative_GetSortKey", GlobalizationNative_GetSortKey}, // System.Private.CoreLib
+{"GlobalizationNative_GetSortVersion", GlobalizationNative_GetSortVersion}, // System.Private.CoreLib
+{"GlobalizationNative_IndexOf", GlobalizationNative_IndexOf}, // System.Private.CoreLib
+{"GlobalizationNative_InitICUFunctions", GlobalizationNative_InitICUFunctions}, // System.Private.CoreLib
+{"GlobalizationNative_InitOrdinalCasingPage", GlobalizationNative_InitOrdinalCasingPage}, // System.Private.CoreLib
+{"GlobalizationNative_IsNormalized", GlobalizationNative_IsNormalized}, // System.Private.CoreLib
+{"GlobalizationNative_IsPredefinedLocale", GlobalizationNative_IsPredefinedLocale}, // System.Private.CoreLib
+{"GlobalizationNative_LastIndexOf", GlobalizationNative_LastIndexOf}, // System.Private.CoreLib
+{"GlobalizationNative_LoadICU", GlobalizationNative_LoadICU}, // System.Private.CoreLib
+{"GlobalizationNative_NormalizeString", GlobalizationNative_NormalizeString}, // System.Private.CoreLib
+{"GlobalizationNative_StartsWith", GlobalizationNative_StartsWith}, // System.Private.CoreLib
+{"GlobalizationNative_ToAscii", GlobalizationNative_ToAscii}, // System.Private.CoreLib
+{"GlobalizationNative_ToUnicode", GlobalizationNative_ToUnicode}, // System.Private.CoreLib
+{NULL, NULL}
+};
+static PinvokeImport libSystem_IO_Compression_Native_imports [] = {
+{"CompressionNative_Crc32", CompressionNative_Crc32}, // System.IO.Compression
+{"CompressionNative_Deflate", CompressionNative_Deflate}, // System.IO.Compression
+{"CompressionNative_DeflateEnd", CompressionNative_DeflateEnd}, // System.IO.Compression
+{"CompressionNative_DeflateInit2_", CompressionNative_DeflateInit2_}, // System.IO.Compression
+{"CompressionNative_Inflate", CompressionNative_Inflate}, // System.IO.Compression
+{"CompressionNative_InflateEnd", CompressionNative_InflateEnd}, // System.IO.Compression
+{"CompressionNative_InflateInit2_", CompressionNative_InflateInit2_}, // System.IO.Compression
+{NULL, NULL}
+};
+static PinvokeImport libSystem_Native_imports [] = {
+{"SystemNative_Access", SystemNative_Access}, // System.Private.CoreLib
+{"SystemNative_AlignedAlloc", SystemNative_AlignedAlloc}, // System.Private.CoreLib
+{"SystemNative_AlignedFree", SystemNative_AlignedFree}, // System.Private.CoreLib
+{"SystemNative_AlignedRealloc", SystemNative_AlignedRealloc}, // System.Private.CoreLib
+{"SystemNative_Calloc", SystemNative_Calloc}, // System.Private.CoreLib
+{"SystemNative_CanGetHiddenFlag", SystemNative_CanGetHiddenFlag}, // System.Private.CoreLib
+{"SystemNative_ChDir", SystemNative_ChDir}, // System.Private.CoreLib
+{"SystemNative_ChMod", SystemNative_ChMod}, // System.Private.CoreLib
+{"SystemNative_Close", SystemNative_Close}, // System.Private.CoreLib
+{"SystemNative_CloseDir", SystemNative_CloseDir}, // System.Private.CoreLib
+{"SystemNative_ConvertErrorPalToPlatform", SystemNative_ConvertErrorPalToPlatform}, // System.Console, System.IO.Compression.ZipFile, System.Net.Primitives, System.Private.CoreLib
+{"SystemNative_ConvertErrorPlatformToPal", SystemNative_ConvertErrorPlatformToPal}, // System.Console, System.IO.Compression.ZipFile, System.Net.Primitives, System.Private.CoreLib
+{"SystemNative_CopyFile", SystemNative_CopyFile}, // System.Private.CoreLib
+{"SystemNative_FAllocate", SystemNative_FAllocate}, // System.Private.CoreLib
+{"SystemNative_FChflags", SystemNative_FChflags}, // System.Private.CoreLib
+{"SystemNative_FChMod", SystemNative_FChMod}, // System.Private.CoreLib
+{"SystemNative_FLock", SystemNative_FLock}, // System.Private.CoreLib
+{"SystemNative_Free", SystemNative_Free}, // System.Private.CoreLib
+{"SystemNative_FreeEnviron", SystemNative_FreeEnviron}, // System.Private.CoreLib
+{"SystemNative_FStat", SystemNative_FStat}, // System.IO.Compression.ZipFile, System.Private.CoreLib
+{"SystemNative_FSync", SystemNative_FSync}, // System.Private.CoreLib
+{"SystemNative_FTruncate", SystemNative_FTruncate}, // System.Private.CoreLib
+{"SystemNative_FUTimens", SystemNative_FUTimens}, // System.Private.CoreLib
+{"SystemNative_GetAddressFamily", SystemNative_GetAddressFamily}, // System.Net.Primitives
+{"SystemNative_GetCpuUtilization", SystemNative_GetCpuUtilization}, // System.Private.CoreLib
+{"SystemNative_GetCwd", SystemNative_GetCwd}, // System.Private.CoreLib
+{"SystemNative_GetDefaultSearchOrderPseudoHandle", SystemNative_GetDefaultSearchOrderPseudoHandle}, // System.Private.CoreLib
+{"SystemNative_GetEnv", SystemNative_GetEnv}, // System.Private.CoreLib
+{"SystemNative_GetEnviron", SystemNative_GetEnviron}, // System.Private.CoreLib
+{"SystemNative_GetErrNo", SystemNative_GetErrNo}, // System.Private.CoreLib
+{"SystemNative_GetFileSystemType", SystemNative_GetFileSystemType}, // System.Private.CoreLib
+{"SystemNative_GetIPv4Address", SystemNative_GetIPv4Address}, // System.Net.Primitives
+{"SystemNative_GetIPv6Address", SystemNative_GetIPv6Address}, // System.Net.Primitives
+{"SystemNative_GetNonCryptographicallySecureRandomBytes", SystemNative_GetNonCryptographicallySecureRandomBytes}, // System.Private.CoreLib
+{"SystemNative_GetPort", SystemNative_GetPort}, // System.Net.Primitives
+{"SystemNative_GetReadDirRBufferSize", SystemNative_GetReadDirRBufferSize}, // System.Private.CoreLib
+{"SystemNative_GetSocketAddressSizes", SystemNative_GetSocketAddressSizes}, // System.Net.Primitives
+{"SystemNative_GetSystemTimeAsTicks", SystemNative_GetSystemTimeAsTicks}, // System.Private.CoreLib
+{"SystemNative_GetTimestamp", SystemNative_GetTimestamp}, // System.Private.CoreLib
+{"SystemNative_GetTimeZoneData", SystemNative_GetTimeZoneData}, // System.Private.CoreLib
+{"SystemNative_LChflags", SystemNative_LChflags}, // System.Private.CoreLib
+{"SystemNative_LChflagsCanSetHiddenFlag", SystemNative_LChflagsCanSetHiddenFlag}, // System.Private.CoreLib
+{"SystemNative_Link", SystemNative_Link}, // System.Private.CoreLib
+{"SystemNative_LockFileRegion", SystemNative_LockFileRegion}, // System.Private.CoreLib
+{"SystemNative_Log", SystemNative_Log}, // System.Private.CoreLib
+{"SystemNative_LogError", SystemNative_LogError}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Acquire", SystemNative_LowLevelMonitor_Acquire}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Create", SystemNative_LowLevelMonitor_Create}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Destroy", SystemNative_LowLevelMonitor_Destroy}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Release", SystemNative_LowLevelMonitor_Release}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Signal_Release", SystemNative_LowLevelMonitor_Signal_Release}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_TimedWait", SystemNative_LowLevelMonitor_TimedWait}, // System.Private.CoreLib
+{"SystemNative_LowLevelMonitor_Wait", SystemNative_LowLevelMonitor_Wait}, // System.Private.CoreLib
+{"SystemNative_LSeek", SystemNative_LSeek}, // System.Private.CoreLib
+{"SystemNative_LStat", SystemNative_LStat}, // System.Private.CoreLib
+{"SystemNative_Malloc", SystemNative_Malloc}, // System.Private.CoreLib
+{"SystemNative_MkDir", SystemNative_MkDir}, // System.Private.CoreLib
+{"SystemNative_MkdTemp", SystemNative_MkdTemp}, // System.Private.CoreLib
+{"SystemNative_MksTemps", SystemNative_MksTemps}, // System.Private.CoreLib
+{"SystemNative_Open", SystemNative_Open}, // System.Private.CoreLib
+{"SystemNative_OpenDir", SystemNative_OpenDir}, // System.Private.CoreLib
+{"SystemNative_Poll", SystemNative_Poll}, // System.Console
+{"SystemNative_PosixFAdvise", SystemNative_PosixFAdvise}, // System.Private.CoreLib
+{"SystemNative_PRead", SystemNative_PRead}, // System.Private.CoreLib
+{"SystemNative_PReadV", SystemNative_PReadV}, // System.Private.CoreLib
+{"SystemNative_PWrite", SystemNative_PWrite}, // System.Private.CoreLib
+{"SystemNative_PWriteV", SystemNative_PWriteV}, // System.Private.CoreLib
+{"SystemNative_Read", SystemNative_Read}, // System.Console, System.Private.CoreLib
+{"SystemNative_ReadDirR", SystemNative_ReadDirR}, // System.Private.CoreLib
+{"SystemNative_ReadLink", SystemNative_ReadLink}, // System.Private.CoreLib
+{"SystemNative_Realloc", SystemNative_Realloc}, // System.Private.CoreLib
+{"SystemNative_Rename", SystemNative_Rename}, // System.Private.CoreLib
+{"SystemNative_RmDir", SystemNative_RmDir}, // System.Private.CoreLib
+{"SystemNative_SchedGetCpu", SystemNative_SchedGetCpu}, // System.Private.CoreLib
+{"SystemNative_SetAddressFamily", SystemNative_SetAddressFamily}, // System.Net.Primitives
+{"SystemNative_SetErrNo", SystemNative_SetErrNo}, // System.Private.CoreLib
+{"SystemNative_SetIPv4Address", SystemNative_SetIPv4Address}, // System.Net.Primitives
+{"SystemNative_SetIPv6Address", SystemNative_SetIPv6Address}, // System.Net.Primitives
+{"SystemNative_SetPort", SystemNative_SetPort}, // System.Net.Primitives
+{"SystemNative_Stat", SystemNative_Stat}, // System.IO.Compression.ZipFile, System.Private.CoreLib
+{"SystemNative_StrErrorR", SystemNative_StrErrorR}, // System.Console, System.IO.Compression.ZipFile, System.Net.Primitives, System.Private.CoreLib
+{"SystemNative_SymLink", SystemNative_SymLink}, // System.Private.CoreLib
+{"SystemNative_SysConf", SystemNative_SysConf}, // System.Private.CoreLib
+{"SystemNative_SysLog", SystemNative_SysLog}, // System.Private.CoreLib
+{"SystemNative_Unlink", SystemNative_Unlink}, // System.Private.CoreLib
+{"SystemNative_UTimensat", SystemNative_UTimensat}, // System.Private.CoreLib
+{"SystemNative_Write", SystemNative_Write}, // System.Console, System.Private.CoreLib
+{NULL, NULL}
+};
+static PinvokeImport wasm_bundled_timezones_imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libc___imports [] = {
+{NULL, NULL}
+};
+static PinvokeImport libc__abi_imports [] = {
+{NULL, NULL}
+};
+static void *pinvoke_tables[] = { bindings_imports,libicudata_imports,libicui18n_imports,libicuuc_imports,libmono_component_debugger_static_imports,libmono_component_debugger_stub_static_imports,libmono_component_diagnostics_tracing_stub_static_imports,libmono_component_hot_reload_static_imports,libmono_component_hot_reload_stub_static_imports,libmono_component_marshal_ilgen_static_imports,libmono_component_marshal_ilgen_stub_static_imports,libmono_ee_interp_imports,libmono_icall_table_imports,libmono_wasm_nosimd_imports,libmonosgen_2_0_imports,libSystem_Globalization_Native_imports,libSystem_IO_Compression_Native_imports,libSystem_Native_imports,wasm_bundled_timezones_imports,libc___imports,libc__abi_imports,};
+static char *pinvoke_names[] = { "bindings","libicudata","libicui18n","libicuuc","libmono-component-debugger-static","libmono-component-debugger-stub-static","libmono-component-diagnostics_tracing-stub-static","libmono-component-hot_reload-static","libmono-component-hot_reload-stub-static","libmono-component-marshal-ilgen-static","libmono-component-marshal-ilgen-stub-static","libmono-ee-interp","libmono-icall-table","libmono-wasm-nosimd","libmonosgen-2.0","libSystem.Globalization.Native","libSystem.IO.Compression.Native","libSystem.Native","wasm-bundled-timezones","libc++","libc++abi",};
+InterpFtnDesc wasm_native_to_interp_ftndescs[7];
+typedef void  (*WasmInterpEntrySig_0) (int*,int*,int*,int*,int*,int*,int*,int*);
+int wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssemblyAndGetFunctionPointer (int arg0,int arg1,int arg2,int arg3,int arg4,int arg5) { 
+int res;
+((WasmInterpEntrySig_0)wasm_native_to_interp_ftndescs [0].func) ((int*)&res, (int*)&arg0, (int*)&arg1, (int*)&arg2, (int*)&arg3, (int*)&arg4, (int*)&arg5, wasm_native_to_interp_ftndescs [0].arg);
+return res;
+}
+typedef void  (*WasmInterpEntrySig_1) (int*,int*,int*,int*,int*);
+int wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssembly (int arg0,int arg1,int arg2) { 
+int res;
+((WasmInterpEntrySig_1)wasm_native_to_interp_ftndescs [1].func) ((int*)&res, (int*)&arg0, (int*)&arg1, (int*)&arg2, wasm_native_to_interp_ftndescs [1].arg);
+return res;
+}
+typedef void  (*WasmInterpEntrySig_2) (int*,int*,int*,int*,int*,int*,int*,int*);
+int wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssemblyBytes (int arg0,int arg1,int arg2,int arg3,int arg4,int arg5) { 
+int res;
+((WasmInterpEntrySig_2)wasm_native_to_interp_ftndescs [2].func) ((int*)&res, (int*)&arg0, (int*)&arg1, (int*)&arg2, (int*)&arg3, (int*)&arg4, (int*)&arg5, wasm_native_to_interp_ftndescs [2].arg);
+return res;
+}
+typedef void  (*WasmInterpEntrySig_3) (int*,int*,int*,int*,int*,int*,int*,int*);
+int wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_GetFunctionPointer (int arg0,int arg1,int arg2,int arg3,int arg4,int arg5) { 
+int res;
+((WasmInterpEntrySig_3)wasm_native_to_interp_ftndescs [3].func) ((int*)&res, (int*)&arg0, (int*)&arg1, (int*)&arg2, (int*)&arg3, (int*)&arg4, (int*)&arg5, wasm_native_to_interp_ftndescs [3].arg);
+return res;
+}
+typedef void  (*WasmInterpEntrySig_4) (int*,int*,int*);
+void wasm_native_to_interp_System_Private_CoreLib_CalendarData_EnumCalendarInfoCallback (int arg0,int arg1) { 
+((WasmInterpEntrySig_4)wasm_native_to_interp_ftndescs [4].func) ((int*)&arg0, (int*)&arg1, wasm_native_to_interp_ftndescs [4].arg);
+}
+typedef void  (*WasmInterpEntrySig_5) (int*);
+void wasm_native_to_interp_System_Private_CoreLib_TimerQueue_TimerHandler () { 
+((WasmInterpEntrySig_5)wasm_native_to_interp_ftndescs [5].func) (wasm_native_to_interp_ftndescs [5].arg);
+}
+typedef void  (*WasmInterpEntrySig_6) (int*);
+void wasm_native_to_interp_System_Private_CoreLib_ThreadPool_BackgroundJobHandler () { 
+((WasmInterpEntrySig_6)wasm_native_to_interp_ftndescs [6].func) (wasm_native_to_interp_ftndescs [6].arg);
+}
+static void *wasm_native_to_interp_funcs[] = { wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssemblyAndGetFunctionPointer,wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssembly,wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_LoadAssemblyBytes,wasm_native_to_interp_System_Private_CoreLib_ComponentActivator_GetFunctionPointer,wasm_native_to_interp_System_Private_CoreLib_CalendarData_EnumCalendarInfoCallback,wasm_native_to_interp_System_Private_CoreLib_TimerQueue_TimerHandler,wasm_native_to_interp_System_Private_CoreLib_ThreadPool_BackgroundJobHandler,};
+static const char *wasm_native_to_interp_map[] = { "System_Private_CoreLib_ComponentActivator_LoadAssemblyAndGetFunctionPointer",
+"System_Private_CoreLib_ComponentActivator_LoadAssembly",
+"System_Private_CoreLib_ComponentActivator_LoadAssemblyBytes",
+"System_Private_CoreLib_ComponentActivator_GetFunctionPointer",
+"System_Private_CoreLib_CalendarData_EnumCalendarInfoCallback",
+"System_Private_CoreLib_TimerQueue_TimerHandler",
+"System_Private_CoreLib_ThreadPool_BackgroundJobHandler",
+};
