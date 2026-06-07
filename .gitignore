@@ -1,0 +1,9 @@
+# SpacetimeDB build artifacts
+spacetimedb/obj/
+spacetimedb/bin/
+*.tar.gz
+*.deb
+dotnet-install.sh
+
+# Logs
+*.log
