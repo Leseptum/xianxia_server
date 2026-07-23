@@ -55,15 +55,27 @@ pip install pygbag
 python3 pygame_client/serve_web.py
 ```
 
-Das baut den Client und serviert ihn auf **Port 64646**, erreichbar auch von
-anderen Geräten im selben Netz. Das Script gibt die URLs aus:
+Das baut den Client und serviert ihn auf **Port 64646**. Das Script bindet an
+deine **LAN-IP** und gibt die zu verwendende URL aus — z.B.:
 
 ```
-Lokal:   http://localhost:64646/
-Im LAN:  http://<deine-IP>:64646/   (z.B. vom Handy im selben Netz)
+http://192.168.178.65:64646/
 ```
 
-Anderer Port: `XIANXIA_WEB_PORT=8080 python3 pygame_client/serve_web.py`.
+**Genau diese URL** verwenden, auch auf demselben Rechner (bei Bind auf die
+LAN-IP funktioniert `localhost:64646` *nicht*). Vom Handy im selben Netz dieselbe
+URL öffnen.
+
+- Nur auf diesem Rechner (localhost): `XIANXIA_WEB_HOST=localhost python3 pygame_client/serve_web.py`
+- Bestimmte IP erzwingen: `XIANXIA_WEB_HOST=192.168.178.65 python3 pygame_client/serve_web.py`
+- Anderer Port: `XIANXIA_WEB_PORT=8080 python3 pygame_client/serve_web.py`
+
+> **Troubleshooting:** Bleibt der Browser bei „Downloading…“ hängen und die
+> Konsole zeigt eine URL mit Host `0.0.0.0` (z.B.
+> `http://0.0.0.0:64646//cdn/…/pythons.js`)? Dann wurde an `0.0.0.0` gebunden —
+> pygbag backt die Bind-Adresse in die Asset-URLs, und `0.0.0.0` lehnt der
+> Browser ab. `serve_web.py` bindet deshalb an einen konkreten Host; öffne exakt
+> die vom Script ausgegebene URL.
 
 ### Manuell / Deployment
 
