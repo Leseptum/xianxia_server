@@ -48,6 +48,8 @@ Für Maincloud: `XIANXIA_SERVER_URL=https://maincloud.spacetimedb.com`.
 - **Bewegung**: WASD oder Pfeiltasten.
 - **Qi sammeln**: Button unten rechts, ruft den `QiSammeln`-Reducer auf (+10 Qi).
 - **Durchbruch**: aktiv sobald Qi voll ist, ruft den `Durchbruch`-Reducer auf.
+- **M**: wechselt zwischen normaler (Kamera folgt Spieler) und Kartenansicht
+  (ganze 256x256-Weltkarte auf den Bildschirm skaliert, alle Spieler als Punkte).
 
 ## Bekannte Einschränkungen (bewusste Vereinfachungen für den POC)
 

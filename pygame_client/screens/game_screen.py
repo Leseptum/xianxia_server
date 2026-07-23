@@ -6,8 +6,10 @@ import pygame
 import config
 from models import BIOM_FARBEN
 from stdb_client import StdbError
+from world_cache import BYTES_PER_TILE
 
 HUD_HEIGHT = 90
+MAP_MARGIN = 20
 
 
 class Button:
@@ -27,6 +29,19 @@ class Button:
         text_surf = font.render(self.label, True, (255, 255, 255))
         text_rect = text_surf.get_rect(center=self.rect.center)
         surface.blit(text_surf, text_rect)
+
+
+def _build_minimap_surface(world_grid):
+    """Builds a breite x hoehe RGB surface, one pixel per tile, from the cached
+    world data - built once and reused for the full-map overview mode."""
+    w, h = world_grid.breite, world_grid.hoehe
+    data = world_grid.data
+    color_by_biom = {int(biom): bytes(color) for biom, color in BIOM_FARBEN.items()}
+    buf = bytearray(w * h * 3)
+    for i in range(w * h):
+        color = color_by_biom.get(data[i * BYTES_PER_TILE], b"\x00\x00\x00")
+        buf[i * 3:i * 3 + 3] = color
+    return pygame.image.frombuffer(bytes(buf), (w, h), "RGB")
 
 
 class GameScreen:
@@ -54,11 +69,30 @@ class GameScreen:
 
         self.error_message = None
 
+        self.view_mode = "follow"
+        minimap_surface = _build_minimap_surface(world_grid)
+        map_area = pygame.Rect(
+            MAP_MARGIN, MAP_MARGIN,
+            width - 2 * MAP_MARGIN, height - HUD_HEIGHT - 2 * MAP_MARGIN,
+        )
+        scale = min(map_area.width / world_grid.breite, map_area.height / world_grid.hoehe)
+        draw_w = int(world_grid.breite * scale)
+        draw_h = int(world_grid.hoehe * scale)
+        self._map_scale = scale
+        self._map_origin = (
+            map_area.x + (map_area.width - draw_w) // 2,
+            map_area.y + (map_area.height - draw_h) // 2,
+        )
+        self._map_rect = pygame.Rect(self._map_origin, (draw_w, draw_h))
+        self._map_surface = pygame.transform.scale(minimap_surface, (draw_w, draw_h))
+
     def _local_snapshot(self):
         return self.poll_worker.get_players().get(self.local_player_id)
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+            self.view_mode = "map" if self.view_mode == "follow" else "follow"
+        elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.collect_button.handle_click(event.pos):
                 self._call_async("qi_sammeln", [self.local_player_id, 10])
             elif self.breakthrough_button.handle_click(event.pos):
@@ -113,8 +147,11 @@ class GameScreen:
 
     def draw(self, surface):
         surface.fill((10, 10, 15))
-        self._draw_world(surface)
-        self._draw_players(surface)
+        if self.view_mode == "map":
+            self._draw_full_map(surface)
+        else:
+            self._draw_world(surface)
+            self._draw_players(surface)
         self._draw_hud(surface)
         if self.error_message:
             self._draw_error_banner(surface)
@@ -127,6 +164,9 @@ class GameScreen:
         return cam_x, cam_y, visible_cols, visible_rows
 
     def _draw_world(self, surface):
+        hint = self.small_font.render("M - Karte anzeigen", True, (200, 200, 200))
+        surface.blit(hint, (self.width - hint.get_width() - 10, 10))
+
         cam_x, cam_y, cols, rows = self._camera_origin()
         start_x = int(cam_x)
         start_y = int(cam_y)
@@ -164,6 +204,26 @@ class GameScreen:
 
             label = self.small_font.render(player.name, True, (255, 255, 255))
             surface.blit(label, (screen_x - label.get_width() / 2, screen_y - config.TILE_SIZE))
+
+    def _draw_full_map(self, surface):
+        origin_x, origin_y = self._map_origin
+        surface.blit(self._map_surface, (origin_x, origin_y))
+        pygame.draw.rect(surface, (80, 80, 90), self._map_rect, 1)
+
+        players = self.poll_worker.get_players()
+        for player_id, player in players.items():
+            is_local = player_id == self.local_player_id
+            world_x = self.pos_x if is_local else player.pos_x
+            world_y = self.pos_y if is_local else player.pos_y
+
+            px = origin_x + world_x * self._map_scale
+            py = origin_y + world_y * self._map_scale
+
+            color = (255, 210, 60) if is_local else (200, 80, 220)
+            pygame.draw.circle(surface, color, (int(px), int(py)), 4 if is_local else 3)
+
+        hint = self.small_font.render("M - zurueck zur normalen Ansicht", True, (200, 200, 200))
+        surface.blit(hint, (origin_x, max(0, origin_y - 22)))
 
     def _draw_hud(self, surface):
         hud_rect = pygame.Rect(0, self.height - HUD_HEIGHT, self.width, HUD_HEIGHT)
