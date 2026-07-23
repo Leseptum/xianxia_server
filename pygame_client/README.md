@@ -41,6 +41,42 @@ export XIANXIA_DB_NAME=xianxia
 
 Für Maincloud: `XIANXIA_SERVER_URL=https://maincloud.spacetimedb.com`.
 
+## Im Browser laufen lassen (Web-Build via Pygbag)
+
+Der Client läuft über [Pygbag](https://github.com/pygame-web/pygbag) auch im
+Browser (inkl. Handy-Browser) — kompiliert nach WebAssembly. Es ist dieselbe
+Codebasis: intern wird nur die HTTP-Schicht umgeschaltet (Desktop: `requests`;
+Web: die Browser-`fetch`-API), erkannt an `sys.platform == "emscripten"`.
+
+```bash
+pip install pygbag
+# aus dem Repo-Root (pygbag erwartet main.py als Einstieg):
+python -m pygbag pygame_client/main.py
+```
+
+Das startet einen lokalen Testserver auf <http://localhost:8000>. Für ein
+statisches Deployment (GitHub Pages, itch.io, …) den Ordner `pygame_client/build/web/`
+hochladen.
+
+Server/Datenbank im Web per URL-Query-Param wählen (Default: Maincloud):
+
+```
+index.html?server=https://maincloud.spacetimedb.com&db=xianxia
+```
+
+### ⚠️ CORS (wichtig)
+
+Im Browser erzwingt `fetch` **CORS**: Der SpacetimeDB-Server muss
+`Access-Control-Allow-Origin` senden und Preflight-Requests (`OPTIONS`) für
+`POST` mit `Authorization`/`Content-Type` beantworten — sonst blockt der Browser
+**jede** Anfrage, unabhängig vom Client-Code.
+
+- **Maincloud** sendet i.d.R. passende CORS-Header → funktioniert.
+- Ein lokaler `spacetime start` erlaubt CORS evtl. nicht. Dann entweder gegen
+  Maincloud testen oder einen CORS-fähigen Reverse-Proxy davorschalten.
+- Ein `http://`-Server ist aus einer `https://`-Seite ohnehin geblockt
+  (Mixed Content) — im Web also einen `https://`-Endpunkt verwenden.
+
 ## Steuerung
 
 - **Login-Screen**: Name/Passwort eingeben, "Registrieren" (neuer Kultivator) oder
@@ -56,10 +92,14 @@ Für Maincloud: `XIANXIA_SERVER_URL=https://maincloud.spacetimedb.com`.
 - HTTP-Polling statt WebSocket-Subscriptions: andere Spieler "springen" alle ~400ms
   nach, statt weich zu interpolieren. Die eigene Figur bewegt sich lokal sofort
   (Client-Prediction), nur `UpdatePosition` wird gedrosselt an den Server geschickt.
-- Die Identität wird in `.stdb_identity.json` zwischengespeichert (gitignored) —
-  wird die Datei gelöscht, verliert der Client den Zugriff auf den zuvor registrierten
-  Kultivator (Server bindet `PlayerId` an die anfragende Identity).
+- Die Identität wird auf dem Desktop in `.stdb_identity.json` zwischengespeichert
+  (gitignored), im Browser im `localStorage` — wird sie gelöscht, verliert der
+  Client den Zugriff auf den zuvor registrierten Kultivator (Server bindet
+  `PlayerId` an die anfragende Identity).
 - Kein Kollisionssystem (man kann z.B. über Wasser-Tiles laufen).
-- Die Weltkarte (`WorldTile`, 65536 Zeilen) wird einmalig geladen und lokal als
-  `world_cache_seed<N>.bin` zwischengespeichert (gitignored), damit nicht bei jedem
-  Start die komplette Tabelle erneut abgefragt werden muss.
+- Die Weltkarte (`WorldTile`, 65536 Zeilen) wird einmalig geladen und auf dem
+  Desktop lokal als `world_cache_seed<N>.bin` zwischengespeichert (gitignored).
+  Im Browser gibt es kein persistentes Dateisystem → dort wird die Karte bei
+  jedem Start frisch geladen (ein einzelner Query).
+- Pygbag/WASM liefert eine Web-/PWA-Version, **keinen** nativen App-Store-Build
+  (kein APK/IPA). Für echtes Mobile bleibt Godot der Weg.

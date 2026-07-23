@@ -1,5 +1,5 @@
+import asyncio
 import hashlib
-import threading
 
 import pygame
 
@@ -74,7 +74,6 @@ class LoginScreen:
         self.status_color = (200, 200, 200)
         self.working = False
 
-        self._lock = threading.Lock()
         self._result_player = None
         self._done = False
 
@@ -103,22 +102,22 @@ class LoginScreen:
         self.status_color = (200, 200, 200)
         self._done = False
         self._result_player = None
-        threading.Thread(target=target, args=(name, password), daemon=True).start()
+        asyncio.create_task(target(name, password))
 
-    def _do_register(self, name, password):
+    async def _do_register(self, name, password):
         pw_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         try:
-            self.client.call_reducer("register", [name, pw_hash])
+            await self.client.call_reducer("register", [name, pw_hash])
 
             player = None
             for _ in range(RETRY_ATTEMPTS):
-                rows = self.client.sql(
+                rows = await self.client.sql(
                     f"SELECT * FROM player WHERE name = '{sql_escape(name)}'"
                 )
                 if rows:
                     player = PlayerRow.from_dict(rows[0])
                     break
-                threading.Event().wait(RETRY_DELAY_SECONDS)
+                await asyncio.sleep(RETRY_DELAY_SECONDS)
 
             if player is None:
                 self._fail("Registrierung hat kein Spielerobjekt erzeugt (Timeout).")
@@ -127,12 +126,12 @@ class LoginScreen:
         except StdbError as exc:
             self._fail(str(exc))
 
-    def _do_login(self, name, password):
+    async def _do_login(self, name, password):
         pw_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         try:
-            self.client.call_reducer("login", [name, pw_hash])
+            await self.client.call_reducer("login", [name, pw_hash])
 
-            rows = self.client.sql(
+            rows = await self.client.sql(
                 f"SELECT * FROM player WHERE name = '{sql_escape(name)}' "
                 f"AND password_hash = '{sql_escape(pw_hash)}'"
             )
@@ -144,29 +143,26 @@ class LoginScreen:
             self._fail(str(exc))
 
     def _succeed(self, player):
-        with self._lock:
-            self._result_player = player
-            self._done = True
+        self._result_player = player
+        self._done = True
 
     def _fail(self, message):
-        with self._lock:
-            self.status_message = message
-            self.status_color = (230, 120, 120)
-            self._done = True
+        self.status_message = message
+        self.status_color = (230, 120, 120)
+        self._done = True
 
     def poll_result(self):
         """Call once per frame from main.py. Returns the logged-in PlayerRow once
         available, otherwise None."""
-        with self._lock:
-            if not self._done:
-                return None
-            self.working = False
-            player = self._result_player
-            self._done = False
-            if player is not None:
-                self.status_message = f"Willkommen, {player.name}!"
-                self.status_color = (150, 230, 150)
-            return player
+        if not self._done:
+            return None
+        self.working = False
+        player = self._result_player
+        self._done = False
+        if player is not None:
+            self.status_message = f"Willkommen, {player.name}!"
+            self.status_color = (150, 230, 150)
+        return player
 
     def draw(self, surface):
         surface.fill((15, 15, 25))

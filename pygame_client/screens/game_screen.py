@@ -1,4 +1,4 @@
-import threading
+import asyncio
 import time
 
 import pygame
@@ -99,15 +99,15 @@ class GameScreen:
                 self._call_async("durchbruch", [self.local_player_id])
 
     def _call_async(self, reducer, args):
-        def run():
+        async def run():
             try:
-                self.client.call_reducer(reducer, args)
+                await self.client.call_reducer(reducer, args)
             except StdbError as exc:
                 self.error_message = str(exc)
             else:
                 self.poll_worker.poll_now()
 
-        threading.Thread(target=run, daemon=True).start()
+        asyncio.create_task(run())
 
     def update(self, dt):
         keys = pygame.key.get_pressed()

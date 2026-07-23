@@ -1,9 +1,9 @@
 import json
 import os
 
-import requests
-
 import config
+import http_backend
+from http_backend import HttpError
 
 
 class StdbError(Exception):
@@ -15,6 +15,9 @@ def sql_escape(value: str) -> str:
     return value.replace("'", "''")
 
 
+_IDENTITY_STORAGE_KEY = "xianxia_stdb_identity"
+
+
 class StdbClient:
     def __init__(self, server_url=None, database=None):
         self.server_url = (server_url or config.SERVER_URL).rstrip("/")
@@ -22,25 +25,40 @@ class StdbClient:
         self.identity = None
         self.token = None
 
-    def get_or_create_identity(self):
+    def _load_cached_identity(self):
+        if http_backend.IS_WEB:
+            raw = http_backend.web_storage_get(_IDENTITY_STORAGE_KEY)
+            return json.loads(raw) if raw else None
         if os.path.exists(config.IDENTITY_FILE):
             with open(config.IDENTITY_FILE, "r") as f:
-                data = json.load(f)
-            self.identity = data["identity"]
-            self.token = data["token"]
+                return json.load(f)
+        return None
+
+    def _save_cached_identity(self, data):
+        if http_backend.IS_WEB:
+            http_backend.web_storage_set(_IDENTITY_STORAGE_KEY, json.dumps(data))
+        else:
+            with open(config.IDENTITY_FILE, "w") as f:
+                json.dump(data, f)
+
+    async def get_or_create_identity(self):
+        cached = self._load_cached_identity()
+        if cached:
+            self.identity = cached["identity"]
+            self.token = cached["token"]
             return
 
         try:
-            resp = requests.post(f"{self.server_url}/v1/identity", timeout=3)
-            resp.raise_for_status()
-        except requests.RequestException as exc:
+            status, text = await http_backend.request("POST", f"{self.server_url}/v1/identity")
+        except HttpError as exc:
             raise StdbError(f"Konnte keine Identity erzeugen: {exc}") from exc
+        if status >= 300:
+            raise StdbError(f"Identity-Erzeugung fehlgeschlagen (HTTP {status}): {text}")
 
-        data = resp.json()
+        data = json.loads(text)
         self.identity = data["identity"]
         self.token = data["token"]
-        with open(config.IDENTITY_FILE, "w") as f:
-            json.dump(data, f)
+        self._save_cached_identity(data)
 
     def _headers(self):
         return {
@@ -48,20 +66,21 @@ class StdbClient:
             "Content-Type": "application/json",
         }
 
-    def sql(self, query):
+    async def sql(self, query):
         """Runs a SQL query, returns a list of dicts (rows of the first statement)."""
         try:
-            resp = requests.post(
+            status, text = await http_backend.request(
+                "POST",
                 f"{self.server_url}/v1/database/{self.database}/sql",
                 headers=self._headers(),
-                data=query,
-                timeout=3,
+                body=query,
             )
-            resp.raise_for_status()
-        except requests.RequestException as exc:
+        except HttpError as exc:
             raise StdbError(f"SQL-Anfrage fehlgeschlagen: {exc}") from exc
+        if status >= 300:
+            raise StdbError(f"SQL-Anfrage fehlgeschlagen (HTTP {status}): {text}")
 
-        statements = resp.json()
+        statements = json.loads(text)
         if not statements:
             return []
 
@@ -74,14 +93,15 @@ class StdbClient:
             rows.append(dict(zip(columns, raw_row)))
         return rows
 
-    def call_reducer(self, name, args):
+    async def call_reducer(self, name, args):
         try:
-            resp = requests.post(
+            status, text = await http_backend.request(
+                "POST",
                 f"{self.server_url}/v1/database/{self.database}/call/{name}",
                 headers=self._headers(),
-                data=json.dumps(args),
-                timeout=3,
+                body=json.dumps(args),
             )
-            resp.raise_for_status()
-        except requests.RequestException as exc:
+        except HttpError as exc:
             raise StdbError(f"Reducer '{name}' fehlgeschlagen: {exc}") from exc
+        if status >= 300:
+            raise StdbError(f"Reducer '{name}' fehlgeschlagen (HTTP {status}): {text}")
