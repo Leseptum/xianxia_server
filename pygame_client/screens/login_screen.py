@@ -108,12 +108,12 @@ class LoginScreen:
     def _do_register(self, name, password):
         pw_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         try:
-            self.client.call_reducer("Register", [name, pw_hash])
+            self.client.call_reducer("register", [name, pw_hash])
 
             player = None
             for _ in range(RETRY_ATTEMPTS):
                 rows = self.client.sql(
-                    f"SELECT * FROM Player WHERE Name = '{sql_escape(name)}'"
+                    f"SELECT * FROM player WHERE name = '{sql_escape(name)}'"
                 )
                 if rows:
                     player = PlayerRow.from_dict(rows[0])
@@ -130,11 +130,11 @@ class LoginScreen:
     def _do_login(self, name, password):
         pw_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         try:
-            self.client.call_reducer("Login", [name, pw_hash])
+            self.client.call_reducer("login", [name, pw_hash])
 
             rows = self.client.sql(
-                f"SELECT * FROM Player WHERE Name = '{sql_escape(name)}' "
-                f"AND PasswordHash = '{sql_escape(pw_hash)}'"
+                f"SELECT * FROM player WHERE name = '{sql_escape(name)}' "
+                f"AND password_hash = '{sql_escape(pw_hash)}'"
             )
             if rows:
                 self._succeed(PlayerRow.from_dict(rows[0]))

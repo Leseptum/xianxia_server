@@ -47,7 +47,7 @@ class PollWorker:
 
     def _poll_once(self):
         try:
-            rows = self.client.sql("SELECT * FROM Player")
+            rows = self.client.sql("SELECT * FROM player")
         except StdbError as exc:
             with self._lock:
                 self._error = str(exc)

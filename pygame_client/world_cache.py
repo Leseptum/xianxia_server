@@ -31,14 +31,14 @@ def _cache_path(seed):
 
 
 def load_world(client):
-    meta_rows = client.sql("SELECT * FROM WorldMeta")
+    meta_rows = client.sql("SELECT * FROM world_meta")
     if not meta_rows:
-        raise RuntimeError("WorldMeta ist leer - wurde die Welt bereits generiert (Init-Reducer gelaufen)?")
+        raise RuntimeError("world_meta ist leer - wurde die Welt bereits generiert (Init-Reducer gelaufen)?")
 
     meta = meta_rows[0]
-    seed = int(meta["Seed"])
-    breite = int(meta["Breite"])
-    hoehe = int(meta["Hoehe"])
+    seed = int(meta["seed"])
+    breite = int(meta["breite"])
+    hoehe = int(meta["hoehe"])
 
     cache_path = _cache_path(seed)
     if os.path.exists(cache_path):
@@ -47,17 +47,17 @@ def load_world(client):
         if len(data) == breite * hoehe * BYTES_PER_TILE:
             return WorldGrid(breite, hoehe, data)
 
-    tiles = client.sql("SELECT * FROM WorldTile")
+    tiles = client.sql("SELECT * FROM world_tile")
     buf = bytearray(breite * hoehe * BYTES_PER_TILE)
     for tile in tiles:
-        x = int(tile["X"])
-        y = int(tile["Y"])
+        x = int(tile["x"])
+        y = int(tile["y"])
         offset = (x + y * breite) * BYTES_PER_TILE
-        buf[offset] = int(tile["BiomTyp"]) & 0xFF
-        buf[offset + 1] = int(tile["KraeuterMenge"]) & 0xFF
-        buf[offset + 2] = int(tile["SpiritStones"]) & 0xFF
-        buf[offset + 3] = int(tile["Holz"]) & 0xFF
-        buf[offset + 4] = int(tile["Erz"]) & 0xFF
+        buf[offset] = int(tile["biom_typ"]) & 0xFF
+        buf[offset + 1] = int(tile["kraeuter_menge"]) & 0xFF
+        buf[offset + 2] = int(tile["spirit_stones"]) & 0xFF
+        buf[offset + 3] = int(tile["holz"]) & 0xFF
+        buf[offset + 4] = int(tile["erz"]) & 0xFF
 
     data = bytes(buf)
     with open(cache_path, "wb") as f:

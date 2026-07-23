@@ -35,12 +35,12 @@ class PlayerRow:
     @staticmethod
     def from_dict(d):
         return PlayerRow(
-            player_id=int(d["PlayerId"]),
-            name=d["Name"],
-            password_hash=d["PasswordHash"],
-            qi=int(d["Qi"]),
-            qi_maximum=int(d["QiMaximum"]),
-            stufe=int(d["Stufe"]),
-            pos_x=float(d["PosX"]),
-            pos_y=float(d["PosY"]),
+            player_id=int(d["player_id"]),
+            name=d["name"],
+            password_hash=d["password_hash"],
+            qi=int(d["qi"]),
+            qi_maximum=int(d["qi_maximum"]),
+            stufe=int(d["stufe"]),
+            pos_x=float(d["pos_x"]),
+            pos_y=float(d["pos_y"]),
         )

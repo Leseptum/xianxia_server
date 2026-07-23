@@ -60,9 +60,9 @@ class GameScreen:
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.collect_button.handle_click(event.pos):
-                self._call_async("QiSammeln", [self.local_player_id, 10])
+                self._call_async("qi_sammeln", [self.local_player_id, 10])
             elif self.breakthrough_button.handle_click(event.pos):
-                self._call_async("Durchbruch", [self.local_player_id])
+                self._call_async("durchbruch", [self.local_player_id])
 
     def _call_async(self, reducer, args):
         def run():
@@ -102,7 +102,7 @@ class GameScreen:
         )
         if should_send:
             self._last_move_sent = now
-            self._call_async("UpdatePosition", [self.local_player_id, self.pos_x, self.pos_y])
+            self._call_async("update_position", [self.local_player_id, self.pos_x, self.pos_y])
         self._was_moving = moving
 
         snapshot = self._local_snapshot()
