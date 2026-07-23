@@ -48,15 +48,35 @@ Browser (inkl. Handy-Browser) — kompiliert nach WebAssembly. Es ist dieselbe
 Codebasis: intern wird nur die HTTP-Schicht umgeschaltet (Desktop: `requests`;
 Web: die Browser-`fetch`-API), erkannt an `sys.platform == "emscripten"`.
 
+### Schnellstart (empfohlen)
+
 ```bash
 pip install pygbag
-# aus dem Repo-Root (pygbag erwartet main.py als Einstieg):
-python -m pygbag pygame_client/main.py
+python3 pygame_client/serve_web.py
 ```
 
-Das startet einen lokalen Testserver auf <http://localhost:8000>. Für ein
-statisches Deployment (GitHub Pages, itch.io, …) den Ordner `pygame_client/build/web/`
-hochladen.
+Das baut den Client und serviert ihn auf **Port 64646**, erreichbar auch von
+anderen Geräten im selben Netz. Das Script gibt die URLs aus:
+
+```
+Lokal:   http://localhost:64646/
+Im LAN:  http://<deine-IP>:64646/   (z.B. vom Handy im selben Netz)
+```
+
+Anderer Port: `XIANXIA_WEB_PORT=8080 python3 pygame_client/serve_web.py`.
+
+### Manuell / Deployment
+
+```bash
+# aus dem Repo-Root (pygbag erwartet main.py als Einstieg):
+python -m pygbag pygame_client/main.py        # Testserver auf :8000
+```
+
+Für ein statisches Deployment (GitHub Pages, itch.io, eigener Apache …) den
+Ordner `pygame_client/build/web/` hochladen. Achtung: der ausliefernde Server
+muss die Cross-Origin-Header `Cross-Origin-Opener-Policy` /
+`Cross-Origin-Embedder-Policy` setzen (das macht `serve_web.py` bzw. pygbags
+Testserver automatisch).
 
 Server/Datenbank im Web per URL-Query-Param wählen (Default: Maincloud):
 
@@ -76,6 +96,14 @@ Im Browser erzwingt `fetch` **CORS**: Der SpacetimeDB-Server muss
   Maincloud testen oder einen CORS-fähigen Reverse-Proxy davorschalten.
 - Ein `http://`-Server ist aus einer `https://`-Seite ohnehin geblockt
   (Mixed Content) — im Web also einen `https://`-Endpunkt verwenden.
+
+**Wichtig für lokales Testen:** `serve_web.py` liefert nur die *Oberfläche* auf
+`:64646` aus. Die Welt/Daten holt der Browser weiterhin direkt von SpacetimeDB
+(`:3000`) — und genau dort greift CORS. Erreicht der Browser deinen lokalen
+`:3000` nicht (kein CORS), bleibt die Weltkarte leer. Für lokales Testen ist
+dann der **Desktop-Client** (`python3 main.py`) der zuverlässige Weg; die
+Web-Version spielt ihre Stärke gegen Maincloud aus:
+`http://localhost:64646/?server=https://maincloud.spacetimedb.com&db=xianxia`.
 
 ## Steuerung
 
