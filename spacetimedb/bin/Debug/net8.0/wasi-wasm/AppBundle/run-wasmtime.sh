@@ -1,1 +1,0 @@
-wasmtime run StdbModule.wasm $*

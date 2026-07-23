@@ -1,0 +1,7 @@
+[app]
+name = "Xianxia Test-Client"
+author = "Xianxia"
+
+[web]
+# Higher pygbag template gives a modern loader; adjust if your pygbag differs.
+template = "default.tmpl"
