@@ -20,22 +20,63 @@ class HttpError(Exception):
 
 
 if IS_WEB:
+    import json
+
     import platform  # noqa: provided by pygbag inside the browser
 
+    # pygbag cannot pass a Python dict to JS fetch, nor `await` a JS promise
+    # directly. The supported pattern (see pygbag/support/cross/aio/fetch.py) is
+    # to inject a JS *generator* that does the fetch and yields its result, then
+    # drive it with `platform.jsiter`, passing only strings across the bridge.
+    # We add custom headers (Authorization) and the status code, which pygbag's
+    # bundled RequestHandler does not support.
+    _JS_FETCH = """
+    window.xianxiaFetch = function* (url, method, headersJson, body) {
+        var opts = { method: method };
+        if (headersJson) { opts.headers = JSON.parse(headersJson); }
+        if (body) { opts.body = body; }
+        var out = 'undefined';
+        fetch(new Request(url, opts))
+          .then(function (r) {
+              return r.text().then(function (t) {
+                  out = JSON.stringify({ status: r.status, text: t });
+              });
+          })
+          .catch(function (e) {
+              out = JSON.stringify({ status: 0, text: '' + e });
+          });
+        while (out === 'undefined') { yield; }
+        yield out;
+    }
+    """
+    _fetch_ready = False
+
+    def _ensure_fetch():
+        global _fetch_ready
+        if not _fetch_ready:
+            platform.window.eval(_JS_FETCH)
+            _fetch_ready = True
+
     async def request(method, url, headers=None, body=None):
-        """Returns (status_code:int, text:str). Uses the browser fetch API."""
-        options = {"method": method}
-        if headers:
-            options["headers"] = headers
-        if body is not None:
-            options["body"] = body
+        """Returns (status_code:int, text:str). Uses the browser fetch API via a
+        pygbag JS generator (only strings cross the Python<->JS bridge)."""
         try:
-            resp = await platform.window.fetch(url, options)
-            status = int(resp.status)
-            text = await resp.text()
-        except Exception as exc:  # JS errors surface as generic exceptions here
-            raise HttpError(f"fetch fehlgeschlagen (evtl. CORS/Netzwerk): {exc}") from exc
-        return status, str(text)
+            _ensure_fetch()
+            headers_json = json.dumps(headers) if headers else ""
+            raw = await platform.jsiter(
+                platform.window.xianxiaFetch(url, method, headers_json, body or "")
+            )
+        except Exception as exc:  # JS/bridge errors surface as generic exceptions
+            raise HttpError(f"fetch-Bruecke fehlgeschlagen: {exc}") from exc
+
+        try:
+            parsed = json.loads(str(raw))
+        except (ValueError, TypeError) as exc:
+            raise HttpError(f"unerwartete fetch-Antwort: {raw!r}") from exc
+
+        if parsed.get("status", 0) == 0:
+            raise HttpError(f"fetch fehlgeschlagen (evtl. CORS/Netzwerk): {parsed.get('text')}")
+        return int(parsed["status"]), parsed["text"]
 
     def web_storage_get(key):
         try:
