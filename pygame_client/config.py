@@ -1,15 +1,9 @@
-import os
-
-import http_backend
-
-# Defaults differ by platform:
-#  - Desktop: talk to a local `spacetime start` by default; override via env vars.
-#  - Web (pygbag): localhost is the user's phone/browser, not the server, and a
-#    browser can't reach a plain-HTTP local server anyway (CORS), so default to
-#    Maincloud. Override at runtime with URL query params, e.g.
-#    index.html?server=https://maincloud.spacetimedb.com&db=xianxia
-_DEFAULT_DESKTOP_URL = "http://127.0.0.1:3000"
-_DEFAULT_WEB_URL = "https://maincloud.spacetimedb.com"
+# Server/db are picked via URL query params, e.g.
+#   index.html?server=https://maincloud.spacetimedb.com&db=xianxia
+# Defaults to our local SpacetimeDB server + the "xianxia" database when no
+# params are given (xianxia isn't published on Maincloud - local-only for now).
+# NOTE: this is the game server's current LAN IP; update if it changes.
+_DEFAULT_URL = "http://192.168.178.65:3000"
 _DEFAULT_DB = "xianxia"
 
 
@@ -24,15 +18,9 @@ def _web_query_params():
         return {}
 
 
-if http_backend.IS_WEB:
-    _params = _web_query_params()
-    SERVER_URL = _params.get("server", [_DEFAULT_WEB_URL])[0]
-    DATABASE_NAME = _params.get("db", [_DEFAULT_DB])[0]
-else:
-    SERVER_URL = os.environ.get("XIANXIA_SERVER_URL", _DEFAULT_DESKTOP_URL)
-    DATABASE_NAME = os.environ.get("XIANXIA_DB_NAME", _DEFAULT_DB)
-
-IDENTITY_FILE = os.path.join(os.path.dirname(__file__), ".stdb_identity.json")
+_params = _web_query_params()
+SERVER_URL = _params.get("server", [_DEFAULT_URL])[0]
+DATABASE_NAME = _params.get("db", [_DEFAULT_DB])[0]
 
 TILE_SIZE = 24
 POLL_INTERVAL_SECONDS = 0.4

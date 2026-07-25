@@ -28,6 +28,7 @@ CORS (Maincloud does; a bare local `spacetime start` may not). See README.
 """
 
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -35,6 +36,7 @@ import pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
 MAIN = HERE / "main.py"
+CONFIG = HERE / "config.py"
 PORT = int(os.environ.get("XIANXIA_WEB_PORT", "64646"))
 
 
@@ -50,6 +52,23 @@ def _lan_ip():
         s.close()
 
 
+def _sync_default_server_url(host):
+    """Keep config.py's baked-in default server in sync with the host we're
+    actually binding to (assumes SpacetimeDB runs on the same machine, port
+    3000 - true for this local dev setup). Without this, a stale hardcoded IP
+    in config.py (e.g. after a DHCP lease change) makes the client silently
+    try the wrong address and fail with a generic fetch error indistinguishable
+    from a real CORS/network problem."""
+    if not CONFIG.exists():
+        return
+    text = CONFIG.read_text()
+    new_default = f'_DEFAULT_URL = "http://{host}:3000"'
+    updated, count = re.subn(r'_DEFAULT_URL = "[^"]*"', new_default, text, count=1)
+    if count and updated != text:
+        CONFIG.write_text(updated)
+        print(f"  config.py Default-Server aktualisiert auf http://{host}:3000")
+
+
 def main():
     try:
         import pygbag  # noqa: F401
@@ -62,6 +81,7 @@ def main():
         return 1
 
     host = os.environ.get("XIANXIA_WEB_HOST") or _lan_ip() or "localhost"
+    _sync_default_server_url(host)
 
     print("Baue und serviere den Web-Client (das erste Mal dauert es etwas)...")
     print(f"  Genau diese URL im Browser oeffnen (auch auf diesem Rechner):")

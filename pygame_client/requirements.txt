@@ -1,8 +1,4 @@
-# Runtime dependencies for the desktop build.
-# 'requests' is desktop-only: under pygbag/WASM (sys.platform == 'emscripten')
-# HTTP goes through the browser fetch API instead, so it must not be pulled in.
 pygame-ce
-requests ; sys_platform != 'emscripten'
 
 # Dev-only, for producing the web build (not needed at runtime):
 #   pip install pygbag

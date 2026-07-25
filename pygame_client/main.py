@@ -1,8 +1,15 @@
 import asyncio
+import os
+
+# Disable SDL's audio subsystem before pygame.init() - the client has no
+# sound, and under Pygbag, SDL otherwise tries to open a real browser
+# AudioContext, which the autoplay policy can block/retry indefinitely even
+# after the user has already clicked "play" (shows as a black screen that
+# never progresses past pygame.init()).
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 import pygame
 
-import http_backend
 import world_cache
 from poll_worker import PollWorker
 from screens.game_screen import GameScreen
@@ -82,8 +89,6 @@ async def main():
 
     if poll_worker is not None:
         poll_worker.stop()
-    if not http_backend.IS_WEB:
-        pygame.quit()
 
 
 async def _show_fatal_error(screen, clock, font, message):

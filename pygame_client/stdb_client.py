@@ -1,5 +1,4 @@
 import json
-import os
 
 import config
 import http_backend
@@ -26,20 +25,11 @@ class StdbClient:
         self.token = None
 
     def _load_cached_identity(self):
-        if http_backend.IS_WEB:
-            raw = http_backend.web_storage_get(_IDENTITY_STORAGE_KEY)
-            return json.loads(raw) if raw else None
-        if os.path.exists(config.IDENTITY_FILE):
-            with open(config.IDENTITY_FILE, "r") as f:
-                return json.load(f)
-        return None
+        raw = http_backend.web_storage_get(_IDENTITY_STORAGE_KEY)
+        return json.loads(raw) if raw else None
 
     def _save_cached_identity(self, data):
-        if http_backend.IS_WEB:
-            http_backend.web_storage_set(_IDENTITY_STORAGE_KEY, json.dumps(data))
-        else:
-            with open(config.IDENTITY_FILE, "w") as f:
-                json.dump(data, f)
+        http_backend.web_storage_set(_IDENTITY_STORAGE_KEY, json.dumps(data))
 
     async def get_or_create_identity(self):
         cached = self._load_cached_identity()
