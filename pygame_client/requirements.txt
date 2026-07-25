@@ -1,5 +1,0 @@
-pygame-ce
-
-# Dev-only, for producing the web build (not needed at runtime):
-#   pip install pygbag
-#   python -m pygbag pygame_client/main.py

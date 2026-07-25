@@ -5,9 +5,5 @@ spacetimedb/bin/
 *.deb
 dotnet-install.sh
 
-# Pygbag / web build output
-pygame_client/build/
-*.apk
-
 # Logs
 *.log
