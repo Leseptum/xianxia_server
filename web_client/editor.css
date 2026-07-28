@@ -1,0 +1,94 @@
+#editor-screen {
+  display: flex;
+  height: 100vh;
+}
+
+#editor-canvas-wrap {
+  flex: 1;
+  overflow: auto;
+  background: #000;
+}
+
+#editor-canvas {
+  display: block;
+  image-rendering: pixelated;
+  cursor: crosshair;
+}
+
+#editor-panel {
+  width: 260px;
+  flex: none;
+  padding: 1rem;
+  background: #14141e;
+  border-left: 2px solid #505059;
+  overflow-y: auto;
+}
+
+#editor-panel h1 {
+  font-size: 1.1rem;
+  margin: 0 0 0.8rem;
+}
+
+#editor-panel h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #999;
+  margin: 1.2rem 0 0.5rem;
+}
+
+#editor-status,
+#editor-hover {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+#editor-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 1.5rem;
+}
+
+#biom-palette {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.biom-swatch {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.biom-swatch.selected {
+  border-color: #fff;
+}
+
+#editor-panel label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-bottom: 0.5rem;
+}
+
+#editor-panel input[type="number"] {
+  width: 70px;
+  padding: 0.3rem;
+  background: #1e1e28;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+}
+
+#editor-panel #error-banner {
+  position: static;
+  margin-top: 1rem;
+  border-radius: 4px;
+}

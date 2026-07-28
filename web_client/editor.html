@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Xianxia - Karteneditor</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="editor.css" />
+</head>
+<body>
+
+  <div id="editor-screen">
+    <div id="editor-canvas-wrap">
+      <canvas id="editor-canvas"></canvas>
+    </div>
+    <div id="editor-panel">
+      <h1>Karteneditor</h1>
+      <p id="editor-status">Lade Welt...</p>
+      <p id="editor-hover">Kachel: -</p>
+
+      <h2>Biom</h2>
+      <div id="biom-palette"></div>
+
+      <h2>Ressourcen</h2>
+      <label>Kräuter <input type="number" id="brush-kraeuter" min="0" max="255" value="0" /></label>
+      <label>Spirit Stones <input type="number" id="brush-spirit-stones" min="0" max="255" value="0" /></label>
+      <label>Holz <input type="number" id="brush-holz" min="0" max="255" value="0" /></label>
+      <label>Erz <input type="number" id="brush-erz" min="0" max="255" value="0" /></label>
+
+      <p id="editor-hint">Klicken/Ziehen auf der Karte malt mit dem aktuellen Pinsel.</p>
+      <p id="error-banner" class="hidden"></p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="stdb_client.js"></script>
+  <script src="world.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>

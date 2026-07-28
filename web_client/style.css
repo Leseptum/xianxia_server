@@ -1,0 +1,178 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #0f0f19;
+  color: #f0f0f0;
+  font-family: system-ui, sans-serif;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#login-screen {
+  max-width: 360px;
+  margin: 100px auto;
+  text-align: center;
+}
+
+#login-screen h1 {
+  font-size: 1.4rem;
+  margin-bottom: 2rem;
+}
+
+#login-form label {
+  display: block;
+  text-align: left;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+#login-form input {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.5rem;
+  background: #1e1e28;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+button {
+  flex: 1;
+  padding: 0.6rem;
+  background: #3c5a3c;
+  border: 1px solid #c8dcc8;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #323232;
+  border-color: #646464;
+  color: #888;
+  cursor: default;
+}
+
+#login-status {
+  margin-top: 1.2rem;
+  min-height: 1.2em;
+  color: #e67878;
+}
+
+.link-button {
+  display: block;
+  margin: 0.8rem auto 0;
+  background: none;
+  border: none;
+  color: #9ab4e6;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+#loading-screen {
+  text-align: center;
+  margin-top: 200px;
+  font-size: 1.2rem;
+}
+
+#game-screen {
+  position: relative;
+  width: 960px;
+  margin: 0 auto;
+}
+
+#game-canvas {
+  display: block;
+  background: #0a0a0f;
+}
+
+#hud {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 960px;
+  height: 90px;
+  background: #14141e;
+  border-top: 2px solid #505059;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+#hud-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#hud-name {
+  font-size: 1.1rem;
+  min-width: 160px;
+}
+
+#qi-bar-track {
+  width: 300px;
+  height: 20px;
+  background: #282832;
+  border: 1px solid #c8c8c8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#qi-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #50a0ff;
+}
+
+#hud-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+#hud-buttons button {
+  flex: none;
+  width: 140px;
+}
+
+#logout-button-game {
+  width: auto;
+  align-self: center;
+  margin: 0;
+}
+
+#map-hint {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #c8c8c8;
+}
+
+#error-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  padding: 6px 10px;
+  background: #782020;
+  font-size: 0.9rem;
+}

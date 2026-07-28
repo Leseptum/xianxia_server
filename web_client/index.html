@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Xianxia - Web-Testclient</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <section id="login-screen">
+    <h1>Xianxia - Web-Testclient</h1>
+    <form id="login-form">
+      <label>
+        Name
+        <input type="text" id="name-input" autocomplete="username" required />
+      </label>
+      <label>
+        Passwort
+        <input type="password" id="password-input" autocomplete="current-password" required />
+      </label>
+      <div class="button-row">
+        <button type="button" id="register-button">Registrieren</button>
+        <button type="button" id="login-button">Login</button>
+      </div>
+    </form>
+    <p id="login-status"></p>
+    <button type="button" id="logout-button-login" class="link-button">
+      Logout (neue Identity erzwingen)
+    </button>
+  </section>
+
+  <section id="loading-screen" class="hidden">
+    <p id="loading-status">Lade Welt...</p>
+  </section>
+
+  <section id="game-screen" class="hidden">
+    <canvas id="game-canvas" width="960" height="720"></canvas>
+    <div id="hud">
+      <div id="hud-info">
+        <span id="hud-name"></span>
+        <div id="qi-bar-track"><div id="qi-bar-fill"></div></div>
+        <span id="qi-text"></span>
+      </div>
+      <div id="hud-buttons">
+        <button id="collect-button">Qi sammeln</button>
+        <button id="breakthrough-button" disabled>Durchbruch</button>
+        <button id="logout-button-game" class="link-button">Logout</button>
+      </div>
+    </div>
+    <p id="map-hint">M - Karte umschalten</p>
+    <p id="error-banner" class="hidden"></p>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="sha256.js"></script>
+  <script src="stdb_client.js"></script>
+  <script src="world.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

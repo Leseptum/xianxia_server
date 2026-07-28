@@ -134,10 +134,35 @@ public static partial class Module
     {
         var player = ctx.Db.Player.PlayerId.Find(playerId);
         if (player == null) return;
+
+        int ix = (int)Math.Clamp(x, 0, WELT_BREITE - 1);
+        int iy = (int)Math.Clamp(y, 0, WELT_HOEHE - 1);
+        var tile = ctx.Db.WorldTile.TileId.Find((uint)(ix + iy * WELT_BREITE));
+        if (tile != null && (tile.Value.BiomTyp == (byte)Biom.Wasser || tile.Value.BiomTyp == (byte)Biom.Berg))
+            return;
+
         var p  = player.Value;
         p.PosX = x;
         p.PosY = y;
         ctx.Db.Player.PlayerId.Update(p);
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void EditTile(ReducerContext ctx, short x, short y, byte biomTyp,
+        byte kraeuterMenge, byte spiritStones, byte holz, byte erz)
+    {
+        if (x < 0 || x >= WELT_BREITE || y < 0 || y >= WELT_HOEHE) return;
+        if (biomTyp > (byte)Biom.Schnee) return;
+
+        var tile = ctx.Db.WorldTile.TileId.Find((uint)(x + y * WELT_BREITE));
+        if (tile == null) return;
+        var t = tile.Value;
+        t.BiomTyp       = biomTyp;
+        t.KraeuterMenge = kraeuterMenge;
+        t.SpiritStones  = spiritStones;
+        t.Holz          = holz;
+        t.Erz           = erz;
+        ctx.Db.WorldTile.TileId.Update(t);
     }
 
     [SpacetimeDB.Reducer]
