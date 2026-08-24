@@ -1,20 +1,20 @@
 # Xianxia MMORPG
 
-Ein 2D isometrisches Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
+Ein 2D Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 
 ## Tech Stack
 
-- **Client:** Godot 4 (.NET)
-- **Backend:** SpacetimeDB 2.3.0 (C# Module)
-- **Welt:** 256×256 isometrische Tilemap (Perlin Noise, 6 Biome)
+- **Backend:** SpacetimeDB (C# Modul, `spacetimedb/`)
+- **Client:** aktuell nur `web_client/` — ein TypeScript-Testclient (Vite + offizielles `spacetimedb`-SDK, Top-Down-Grid-Rendering, kein Isometrie) zum Ausprobieren der Reducer/Tabellen ohne echten Spiel-Client, siehe `web_client/README.md`. Ob der finale Client dabei bleibt oder auf Godot 4 (.NET) umgestellt wird, ist noch offen — im Repo existiert bislang kein Godot-Projekt.
+- **Welt:** 256×256 Tilemap, Perlin-Noise-generiert, 6 Biome
 
 ## Features
 
-- Echtzeit-Multiplayer über SpacetimeDB
+- Multiplayer über SpacetimeDB — Positions-Updates laufen live über WebSocket-Subscriptions (offizielles SDK, kein Polling)
 - Prozedural generierte Welt (Wasser, Strand, Ebene, Wald, Berg, Schnee)
 - Qi-Kultivierungssystem mit Durchbruch-Mechanik
-- Spieler-Synchronisation (10x/Sekunde)
 - Login & Registrierung mit SHA256-Passwort-Hashing
+- Karteneditor (`web_client/editor.html`) zum Bemalen von Biomen/Ressourcen pro Kachel
 
 ## Geplant
 
@@ -29,22 +29,28 @@ Ein 2D isometrisches Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 
 ### Voraussetzungen
 
-- Godot 4 (.NET Version)
-- .NET 10
-- SpacetimeDB 2.3.0
-- WSL2 (Ubuntu)
+- .NET SDK 8.0
+- SpacetimeDB CLI (Modul nutzt `SpacetimeDB.Runtime` 2.3.x; getestete CLI-Version 2.7.0)
+- Node.js 22+ (für `web_client/`, Vite + `spacetimedb`-SDK)
+- Linux (getestet unter Ubuntu 24.04 / WSL2)
 
 ### Server starten
 
 ```bash
-cd xianxia_server/xianxia
+cd spacetimedb
 spacetime start
 spacetime publish --server local xianxia
 ```
 
 ### Client starten
 
-Projekt in Godot 4 öffnen und starten.
+```bash
+cd web_client
+npm install
+npm run dev
+```
+
+Details, Steuerung und Mehrspieler-Test siehe `web_client/README.md`.
 
 ## Lizenz
 

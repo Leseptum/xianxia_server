@@ -2,13 +2,28 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Xianxia - Karteneditor</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="editor.css" />
 </head>
 <body>
 
-  <div id="editor-screen">
+  <section id="login-screen">
+    <h1>Karteneditor - Passwort</h1>
+    <form id="login-form">
+      <label>
+        Editor-Passwort
+        <input type="password" id="editor-password-input" autocomplete="current-password" required />
+      </label>
+      <div class="button-row">
+        <button type="submit" id="editor-unlock-button">Freischalten</button>
+      </div>
+    </form>
+    <p id="login-status"></p>
+  </section>
+
+  <div id="editor-screen" class="hidden">
     <div id="editor-canvas-wrap">
       <canvas id="editor-canvas"></canvas>
     </div>
@@ -31,9 +46,8 @@
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="stdb_client.js"></script>
-  <script src="world.js"></script>
-  <script src="editor.js"></script>
+  <p class="version-tag">v0.1.2</p>
+
+  <script type="module" src="/src/editor.ts"></script>
 </body>
 </html>

@@ -7,3 +7,10 @@ dotnet-install.sh
 
 # Logs
 *.log
+
+# Secrets
+editorpasswort
+
+# web_client (Vite/npm)
+web_client/node_modules/
+web_client/dist/

@@ -12,6 +12,7 @@ public static partial class Module
     private const float PERSISTENZ  = 0.5f;
     private const float LACUNARITY  = 2.0f;
     private const float WASSER_ANTEIL = 0.30f;
+    private const ulong QI_PRO_SAMMELN = 10;
 
     private static readonly float[] LAND_SHARES = { 0.08f, 0.25f, 0.30f, 0.25f, 0.12f };
 
@@ -54,12 +55,62 @@ public static partial class Module
     {
         [PrimaryKey] public ulong PlayerId;
         public string Name;
-        public string PasswordHash;
         public ulong  Qi;
         public ulong  QiMaximum;
         public byte   Stufe;
         public float  PosX;
         public float  PosY;
+    }
+
+    // Not Public: password hashes must never be readable via the public SQL/subscription
+    // interface (they're the sole login credential - no server-side salting, see Register).
+    [SpacetimeDB.Table(Accessor = "Credential")]
+    public partial struct Credential
+    {
+        [PrimaryKey] public ulong PlayerId;
+        public string PasswordHash;
+    }
+
+    // Public, but deliberately carries no secret: only a pass/fail bit per PlayerId so the
+    // client can observe whether its own Login call matched, without ever reading a hash back.
+    [SpacetimeDB.Table(Accessor = "LoginAttempt", Public = true)]
+    public partial struct LoginAttempt
+    {
+        [PrimaryKey] public ulong PlayerId;
+        public bool Success;
+    }
+
+    // Not Public, singleton (Id always 0): the map-editor password hash. Set once via
+    // SetEditorPassword (meant to be called from the CLI right after publish, never from
+    // web_client JS/git) - deliberately kept out of source control, unlike every other
+    // "secret" in this POC.
+    [SpacetimeDB.Table(Accessor = "EditorSecret")]
+    public partial struct EditorSecret
+    {
+        [PrimaryKey] public uint Id;
+        public string PasswordHash;
+    }
+
+    // Public, but carries no secret: just whether this caller's Identity is currently
+    // authorized to call EditTile. Keyed by the raw Identity (not the hashed PlayerId used
+    // for Player/Credential) since editor.html has no registered player to key off of.
+    [SpacetimeDB.Table(Accessor = "EditorSession", Public = true)]
+    public partial struct EditorSession
+    {
+        [PrimaryKey] public Identity Owner;
+        public bool Authorized;
+    }
+
+    // Not Public: purely an internal identity->playerId link so a relogin from a new
+    // connection (new browser tab/device, different Identity) can act as the target
+    // account. Written only by Register (to your own new row) or by Login after a
+    // successful password check - a client can never bind itself to an arbitrary
+    // PlayerId without knowing the password. See SenderPlayerId.
+    [SpacetimeDB.Table(Accessor = "PlayerSession")]
+    public partial struct PlayerSession
+    {
+        [PrimaryKey] public Identity Identity;
+        public ulong PlayerId;
     }
 
     [SpacetimeDB.Reducer(ReducerKind.Init)]
@@ -86,29 +137,49 @@ public static partial class Module
         Log.Info("Weltgenerierung abgeschlossen!");
     }
 
+    // Resolves the PlayerId this connection is currently allowed to act as. A successful
+    // Register or Login writes a PlayerSession row binding ctx.Sender to that PlayerId
+    // (see those reducers) - checked first so a relogin from a fresh Identity (new tab,
+    // cleared session, different device) actually works, not just a hash match on the
+    // connecting Identity itself. Falls back to the raw hash for rows created before this
+    // fix / Identities that only ever registered and never needed a PlayerSession lookup;
+    // still safe, since that hash is still only ever *their own* PlayerId.
+    private static ulong SenderPlayerId(ReducerContext ctx)
+    {
+        var session = ctx.Db.PlayerSession.Identity.Find(ctx.Sender);
+        if (session != null) return session.Value.PlayerId;
+        return (ulong)Math.Abs(ctx.Sender.GetHashCode());
+    }
+
     [SpacetimeDB.Reducer]
     public static void Register(ReducerContext ctx, string name, string passwordHash)
     {
+        var playerId = SenderPlayerId(ctx);
+        if (ctx.Db.Player.PlayerId.Find(playerId) != null)
+        {
+            Log.Info("Spieler bereits registriert.");
+            return;
+        }
+
         foreach (var existing in ctx.Db.Player.Iter())
         {
-            if (existing.PlayerId == (ulong)Math.Abs(ctx.Sender.GetHashCode()))
-            {
-                Log.Info($"Spieler {existing.Name} bereits registriert.");
-                return;
-            }
+            if (existing.Name != name) continue;
+            Log.Info($"Name bereits vergeben: {name}");
+            return;
         }
 
         ctx.Db.Player.Insert(new Player
         {
-            PlayerId     = (ulong)Math.Abs(ctx.Sender.GetHashCode()),
-            Name         = name,
-            PasswordHash = passwordHash,
-            Qi           = 0,
-            QiMaximum    = 100,
-            Stufe        = 0,
-            PosX         = 128f,
-            PosY         = 128f
+            PlayerId  = playerId,
+            Name      = name,
+            Qi        = 0,
+            QiMaximum = 100,
+            Stufe     = 0,
+            PosX      = 128f,
+            PosY      = 128f
         });
+        ctx.Db.Credential.Insert(new Credential { PlayerId = playerId, PasswordHash = passwordHash });
+        ctx.Db.PlayerSession.Insert(new PlayerSession { Identity = ctx.Sender, PlayerId = playerId });
         Log.Info($"Neuer Kultivator: {name}");
     }
 
@@ -117,40 +188,88 @@ public static partial class Module
     {
         foreach (var player in ctx.Db.Player.Iter())
         {
-            if (player.Name == name)
+            if (player.Name != name) continue;
+
+            var cred = ctx.Db.Credential.PlayerId.Find(player.PlayerId);
+            bool success = cred != null && cred.Value.PasswordHash == passwordHash;
+
+            if (ctx.Db.LoginAttempt.PlayerId.Find(player.PlayerId) != null)
+                ctx.Db.LoginAttempt.PlayerId.Update(new LoginAttempt { PlayerId = player.PlayerId, Success = success });
+            else
+                ctx.Db.LoginAttempt.Insert(new LoginAttempt { PlayerId = player.PlayerId, Success = success });
+
+            if (success)
             {
-                if (player.PasswordHash == passwordHash)
-                    Log.Info($"Login erfolgreich: {name}");
+                // Binds *this* connection's Identity to the target account, so subsequent
+                // action reducers (UpdatePosition/QiSammeln/Durchbruch) resolve to the
+                // right PlayerId even from a brand-new Identity - this is what actually
+                // makes a relogin from a new tab/device/session work.
+                if (ctx.Db.PlayerSession.Identity.Find(ctx.Sender) != null)
+                    ctx.Db.PlayerSession.Identity.Update(new PlayerSession { Identity = ctx.Sender, PlayerId = player.PlayerId });
                 else
-                    Log.Warn($"Falsches Passwort für: {name}");
-                return;
+                    ctx.Db.PlayerSession.Insert(new PlayerSession { Identity = ctx.Sender, PlayerId = player.PlayerId });
             }
+
+            Log.Info(success ? $"Login erfolgreich: {name}" : $"Falsches Passwort für: {name}");
+            return;
         }
         Log.Warn($"Spieler nicht gefunden: {name}");
     }
 
     [SpacetimeDB.Reducer]
-    public static void UpdatePosition(ReducerContext ctx, ulong playerId, float x, float y)
+    public static void UpdatePosition(ReducerContext ctx, float x, float y)
     {
-        var player = ctx.Db.Player.PlayerId.Find(playerId);
+        var player = ctx.Db.Player.PlayerId.Find(SenderPlayerId(ctx));
         if (player == null) return;
 
-        int ix = (int)Math.Clamp(x, 0, WELT_BREITE - 1);
-        int iy = (int)Math.Clamp(y, 0, WELT_HOEHE - 1);
-        var tile = ctx.Db.WorldTile.TileId.Find((uint)(ix + iy * WELT_BREITE));
+        float ix = Math.Clamp(x, 0, WELT_BREITE - 1);
+        float iy = Math.Clamp(y, 0, WELT_HOEHE - 1);
+        var tile = ctx.Db.WorldTile.TileId.Find((uint)((int)ix + (int)iy * WELT_BREITE));
         if (tile != null && (tile.Value.BiomTyp == (byte)Biom.Wasser || tile.Value.BiomTyp == (byte)Biom.Berg))
             return;
 
         var p  = player.Value;
-        p.PosX = x;
-        p.PosY = y;
+        p.PosX = ix;
+        p.PosY = iy;
         ctx.Db.Player.PlayerId.Update(p);
+    }
+
+    // Meant to be called exactly once from the CLI right after `spacetime publish`
+    // (`spacetime call <db> set_editor_password <sha256-hex-of-your-chosen-password>`),
+    // never from the web client - that's what keeps the actual secret out of git and off
+    // the wire except for that one deployer-initiated call. No-ops if already set, so a
+    // stray/malicious call can't overwrite an existing password.
+    [SpacetimeDB.Reducer]
+    public static void SetEditorPassword(ReducerContext ctx, string passwordHash)
+    {
+        if (ctx.Db.EditorSecret.Id.Find(0) != null)
+        {
+            Log.Warn("Editor-Passwort ist bereits gesetzt, Aufruf ignoriert.");
+            return;
+        }
+        ctx.Db.EditorSecret.Insert(new EditorSecret { Id = 0, PasswordHash = passwordHash });
+        Log.Info("Editor-Passwort gesetzt.");
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void EditorLogin(ReducerContext ctx, string passwordHash)
+    {
+        var secret = ctx.Db.EditorSecret.Id.Find(0);
+        bool authorized = secret != null && secret.Value.PasswordHash == passwordHash;
+
+        if (ctx.Db.EditorSession.Owner.Find(ctx.Sender) != null)
+            ctx.Db.EditorSession.Owner.Update(new EditorSession { Owner = ctx.Sender, Authorized = authorized });
+        else
+            ctx.Db.EditorSession.Insert(new EditorSession { Owner = ctx.Sender, Authorized = authorized });
     }
 
     [SpacetimeDB.Reducer]
     public static void EditTile(ReducerContext ctx, short x, short y, byte biomTyp,
         byte kraeuterMenge, byte spiritStones, byte holz, byte erz)
     {
+        var session = ctx.Db.EditorSession.Owner.Find(ctx.Sender);
+        if (session == null || !session.Value.Authorized) return;
+
         if (x < 0 || x >= WELT_BREITE || y < 0 || y >= WELT_HOEHE) return;
         if (biomTyp > (byte)Biom.Schnee) return;
 
@@ -166,19 +285,19 @@ public static partial class Module
     }
 
     [SpacetimeDB.Reducer]
-    public static void QiSammeln(ReducerContext ctx, ulong playerId, ulong menge)
+    public static void QiSammeln(ReducerContext ctx)
     {
-        var player = ctx.Db.Player.PlayerId.Find(playerId);
+        var player = ctx.Db.Player.PlayerId.Find(SenderPlayerId(ctx));
         if (player == null) return;
         var p = player.Value;
-        p.Qi  = Math.Min(p.Qi + menge, p.QiMaximum);
+        p.Qi  = Math.Min(p.Qi + QI_PRO_SAMMELN, p.QiMaximum);
         ctx.Db.Player.PlayerId.Update(p);
     }
 
     [SpacetimeDB.Reducer]
-    public static void Durchbruch(ReducerContext ctx, ulong playerId)
+    public static void Durchbruch(ReducerContext ctx)
     {
-        var player = ctx.Db.Player.PlayerId.Find(playerId);
+        var player = ctx.Db.Player.PlayerId.Find(SenderPlayerId(ctx));
         if (player == null) return;
         var p = player.Value;
         if (p.Qi < p.QiMaximum) return;

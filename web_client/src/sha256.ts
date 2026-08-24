@@ -13,11 +13,11 @@ const SHA256_K = [
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-function sha256Rotr(x, n) {
+function sha256Rotr(x: number, n: number): number {
   return (x >>> n) | (x << (32 - n));
 }
 
-function sha256Digest(bytes) {
+function sha256Digest(bytes: Uint8Array): string {
   let H = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
     0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
@@ -64,6 +64,6 @@ function sha256Digest(bytes) {
   return H.map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
 }
 
-function sha256Hex(text) {
+export function sha256Hex(text: string): string {
   return sha256Digest(new TextEncoder().encode(text));
 }

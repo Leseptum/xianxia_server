@@ -1,5 +1,9 @@
 * { box-sizing: border-box; }
 
+html, body {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background: #0f0f19;
@@ -7,13 +11,34 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+body.no-scroll {
+  overflow: hidden;
+  height: 100%;
+}
+
 .hidden {
   display: none !important;
 }
 
+.version-tag {
+  position: fixed;
+  top: 6px;
+  left: 8px;
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #666;
+  opacity: 0.65;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+
 #login-screen {
   max-width: 360px;
+  width: 100%;
   margin: 100px auto;
+  padding: 0 16px;
   text-align: center;
 }
 
@@ -57,6 +82,8 @@ button {
   color: #fff;
   font-size: 0.95rem;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:disabled {
@@ -93,11 +120,25 @@ button:disabled {
 #game-screen {
   position: relative;
   width: 960px;
+  height: 720px;
   margin: 0 auto;
+}
+
+@media (max-width: 960px), (max-height: 760px) {
+  #game-screen {
+    width: 100vw;
+    /* svh (not dvh): a stable minimum height that doesn't recompute every time the
+       mobile browser's address bar shows/hides during a scroll, which otherwise
+       thrashes resizeCanvas() mid-scroll and shows up as canvas tearing. */
+    height: 100svh;
+    overflow: hidden;
+  }
 }
 
 #game-canvas {
   display: block;
+  width: 100%;
+  height: 100%;
   background: #0a0a0f;
 }
 
@@ -105,7 +146,7 @@ button:disabled {
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 960px;
+  width: 100%;
   height: 90px;
   background: #14141e;
   border-top: 2px solid #505059;
@@ -157,13 +198,156 @@ button:disabled {
   margin: 0;
 }
 
-#map-hint {
+/* Placed after the unconditional #hud-* rules above on purpose: at equal specificity
+   (id + type) the later rule in the file wins regardless of the media query, so this
+   has to come last to actually override them on narrow screens. */
+@media (max-width: 600px) {
+  #hud {
+    flex-direction: column;
+    height: auto;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  #hud-name {
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+
+  #qi-bar-track {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  #hud-buttons {
+    width: 100%;
+  }
+
+  #hud-buttons button {
+    flex: 1;
+    width: auto;
+  }
+}
+
+#touch-dpad {
+  display: none;
+  position: absolute;
+  left: 14px;
+  /* --hud-height is set from app.js (resizeCanvas) to the HUD's actual measured
+     height, which varies (stacked layout on mobile) - keeps this clear of the HUD
+     without guessing a fixed pixel offset. */
+  bottom: calc(var(--hud-height, 90px) + 12px);
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 4px;
+  z-index: 5;
+}
+
+@media (pointer: coarse) {
+  #touch-dpad {
+    display: grid;
+  }
+}
+
+.dpad-btn {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 8px;
+  background: rgba(60, 90, 60, 0.55);
+  border: 1px solid rgba(200, 220, 200, 0.5);
+  color: #fff;
+  font-size: 1.1rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#dpad-up { grid-column: 2; grid-row: 1; }
+#dpad-left { grid-column: 1; grid-row: 2; }
+#dpad-right { grid-column: 3; grid-row: 2; }
+#dpad-down { grid-column: 2; grid-row: 3; }
+
+#map-toggle {
   position: absolute;
   top: 8px;
   right: 12px;
+}
+
+#map-hint {
   margin: 0;
   font-size: 0.85rem;
   color: #c8c8c8;
+}
+
+#map-toggle-button {
+  display: none;
+  width: auto;
+  flex: none;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+@media (pointer: coarse) {
+  #map-hint {
+    display: none;
+  }
+
+  #map-toggle-button {
+    display: block;
+  }
+}
+
+#drawer-handle {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  /* Logout is rare enough on mobile that it doesn't need a permanent slot in the
+     cramped HUD row - it lives in a tab that slides out from the right edge instead,
+     tapped open via #drawer-handle. */
+  #drawer-handle {
+    display: block;
+    position: absolute;
+    top: 45%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 60px;
+    padding: 0;
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+    background: rgba(30, 30, 40, 0.85);
+    border-color: #505059;
+    color: #ccc;
+    font-size: 0.9rem;
+    z-index: 11;
+  }
+
+  #logout-button-game {
+    position: absolute;
+    top: auto;
+    bottom: calc(var(--hud-height, 90px) + 12px);
+    right: -130px;
+    width: 120px;
+    margin: 0;
+    padding: 0.5rem;
+    background: #3c5a3c;
+    border: 1px solid #c8dcc8;
+    border-radius: 4px 0 0 4px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.85rem;
+    z-index: 10;
+    transition: right 0.25s ease;
+  }
+
+  #game-screen.drawer-open #logout-button-game {
+    right: 0;
+  }
 }
 
 #error-banner {

@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Xianxia - Web-Testclient</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -34,7 +35,13 @@
   </section>
 
   <section id="game-screen" class="hidden">
-    <canvas id="game-canvas" width="960" height="720"></canvas>
+    <canvas id="game-canvas"></canvas>
+    <div id="touch-dpad">
+      <button type="button" class="dpad-btn" id="dpad-up" aria-label="Hoch">▲</button>
+      <button type="button" class="dpad-btn" id="dpad-left" aria-label="Links">◀</button>
+      <button type="button" class="dpad-btn" id="dpad-right" aria-label="Rechts">▶</button>
+      <button type="button" class="dpad-btn" id="dpad-down" aria-label="Runter">▼</button>
+    </div>
     <div id="hud">
       <div id="hud-info">
         <span id="hud-name"></span>
@@ -47,14 +54,16 @@
         <button id="logout-button-game" class="link-button">Logout</button>
       </div>
     </div>
-    <p id="map-hint">M - Karte umschalten</p>
+    <div id="map-toggle">
+      <p id="map-hint">M - Karte umschalten</p>
+      <button type="button" id="map-toggle-button">Karte</button>
+    </div>
+    <button type="button" id="drawer-handle" aria-label="Menü">‹</button>
     <p id="error-banner" class="hidden"></p>
   </section>
 
-  <script src="config.js"></script>
-  <script src="sha256.js"></script>
-  <script src="stdb_client.js"></script>
-  <script src="world.js"></script>
-  <script src="app.js"></script>
+  <p class="version-tag">v0.1.2</p>
+
+  <script type="module" src="/src/app.ts"></script>
 </body>
 </html>
