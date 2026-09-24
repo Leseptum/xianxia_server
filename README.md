@@ -14,6 +14,7 @@ Ein 2D Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 - Prozedural generierte Welt (Wasser, Strand, Ebene, Wald, Berg, Schnee)
 - Qi-Kultivierungssystem mit Durchbruch-Mechanik
 - Login & Registrierung mit SHA256-Passwort-Hashing
+- Statische NPCs (Tiere, Menschen, Fabelwesen) bevölkern die Karte, angreifbar mit HP-basiertem Kampf (kein Respawn/Loot bisher)
 - Karteneditor (`web_client/editor.html`) zum Bemalen von Biomen/Ressourcen pro Kachel
 
 ## Geplant

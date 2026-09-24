@@ -172,6 +172,20 @@ else
   bad "expected exactly 1 row named '$NAME' before and after, got $COUNT_BEFORE -> $COUNT_AFTER"
 fi
 
+echo "=== 6. npc_tick (scheduled reducer) actually moves NPCs ==="
+before="$(spacetime sql "${SERVER_ARGS[@]}" "$DB" --format json "SELECT npc_id, pos_x, pos_y FROM npc" 2>/dev/null | jq -c '.[0].rows | sort')"
+if [[ -n "$before" ]] && [[ "$before" != "[]" ]]; then
+  sleep 4 # > NPC_TICK_INTERVALL (3s in Lib.cs)
+  after="$(spacetime sql "${SERVER_ARGS[@]}" "$DB" --format json "SELECT npc_id, pos_x, pos_y FROM npc" 2>/dev/null | jq -c '.[0].rows | sort')"
+  if [[ "$before" != "$after" ]]; then
+    ok "at least one NPC position changed after waiting past one tick interval"
+  else
+    bad "expected NPC positions to change after waiting past one tick interval (npc_tick scheduled reducer may not be firing)"
+  fi
+else
+  bad "no npc rows found - cannot verify npc_tick (was the world initialized?)"
+fi
+
 echo
 echo "=== Summary: $PASS passed, $FAIL failed ==="
 [[ "$FAIL" -eq 0 ]]

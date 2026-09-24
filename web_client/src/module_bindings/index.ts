@@ -34,13 +34,21 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AngreifenReducer from "./angreifen_reducer";
 import DurchbruchReducer from "./durchbruch_reducer";
 import EditorLoginReducer from "./editor_login_reducer";
 import EditTileReducer from "./edit_tile_reducer";
+import KarteAlsStandardSetzenReducer from "./karte_als_standard_setzen_reducer";
+import KarteErstellenReducer from "./karte_erstellen_reducer";
 import LoginReducer from "./login_reducer";
+import NpcErstellenReducer from "./npc_erstellen_reducer";
+import NpcLoeschenReducer from "./npc_loeschen_reducer";
+import NpcVerschiebenReducer from "./npc_verschieben_reducer";
 import QiSammelnReducer from "./qi_sammeln_reducer";
 import RegisterReducer from "./register_reducer";
 import SetEditorPasswordReducer from "./set_editor_password_reducer";
+import SpielerLoeschenReducer from "./spieler_loeschen_reducer";
+import SpielerVerschiebenReducer from "./spieler_verschieben_reducer";
 import UpdatePositionReducer from "./update_position_reducer";
 
 // Import all procedure arg schemas
@@ -48,7 +56,10 @@ import UpdatePositionReducer from "./update_position_reducer";
 // Import all table schema definitions
 import EditorSessionRow from "./editor_session_table";
 import LoginAttemptRow from "./login_attempt_table";
+import NpcRow from "./npc_table";
+import NpcTickTimerRow from "./npc_tick_timer_table";
 import PlayerRow from "./player_table";
+import StandardMapRow from "./standard_map_table";
 import WorldMetaRow from "./world_meta_table";
 import WorldTileRow from "./world_tile_table";
 
@@ -78,9 +89,37 @@ const tablesSchema = __schema({
       { name: 'login_attempt_player_id_key', constraint: 'unique', columns: ['playerId'] },
     ],
   }, LoginAttemptRow),
+  npc: __table({
+    name: 'npc',
+    indexes: [
+      { accessor: 'MapId', name: 'npc_map_id_idx_btree', algorithm: 'btree', columns: [
+        'mapId',
+      ] },
+      { accessor: 'NpcId', name: 'npc_npc_id_idx_btree', algorithm: 'btree', columns: [
+        'npcId',
+      ] },
+    ],
+    constraints: [
+      { name: 'npc_npc_id_key', constraint: 'unique', columns: ['npcId'] },
+    ],
+  }, NpcRow),
+  npcTickTimer: __table({
+    name: 'npc_tick_timer',
+    indexes: [
+      { accessor: 'ScheduledId', name: 'npc_tick_timer_scheduled_id_idx_btree', algorithm: 'btree', columns: [
+        'scheduledId',
+      ] },
+    ],
+    constraints: [
+      { name: 'npc_tick_timer_scheduled_id_key', constraint: 'unique', columns: ['scheduledId'] },
+    ],
+  }, NpcTickTimerRow),
   player: __table({
     name: 'player',
     indexes: [
+      { accessor: 'MapId', name: 'player_map_id_idx_btree', algorithm: 'btree', columns: [
+        'mapId',
+      ] },
       { accessor: 'PlayerId', name: 'player_player_id_idx_btree', algorithm: 'btree', columns: [
         'playerId',
       ] },
@@ -89,20 +128,34 @@ const tablesSchema = __schema({
       { name: 'player_player_id_key', constraint: 'unique', columns: ['playerId'] },
     ],
   }, PlayerRow),
-  worldMeta: __table({
-    name: 'world_meta',
+  standardMap: __table({
+    name: 'standard_map',
     indexes: [
-      { accessor: 'Id', name: 'world_meta_id_idx_btree', algorithm: 'btree', columns: [
+      { accessor: 'Id', name: 'standard_map_id_idx_btree', algorithm: 'btree', columns: [
         'id',
       ] },
     ],
     constraints: [
-      { name: 'world_meta_id_key', constraint: 'unique', columns: ['id'] },
+      { name: 'standard_map_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, StandardMapRow),
+  worldMeta: __table({
+    name: 'world_meta',
+    indexes: [
+      { accessor: 'MapId', name: 'world_meta_map_id_idx_btree', algorithm: 'btree', columns: [
+        'mapId',
+      ] },
+    ],
+    constraints: [
+      { name: 'world_meta_map_id_key', constraint: 'unique', columns: ['mapId'] },
     ],
   }, WorldMetaRow),
   worldTile: __table({
     name: 'world_tile',
     indexes: [
+      { accessor: 'MapId', name: 'world_tile_map_id_idx_btree', algorithm: 'btree', columns: [
+        'mapId',
+      ] },
       { accessor: 'TileId', name: 'world_tile_tile_id_idx_btree', algorithm: 'btree', columns: [
         'tileId',
       ] },
@@ -115,13 +168,21 @@ const tablesSchema = __schema({
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("angreifen", AngreifenReducer),
   __reducerSchema("durchbruch", DurchbruchReducer),
   __reducerSchema("editor_login", EditorLoginReducer),
   __reducerSchema("edit_tile", EditTileReducer),
+  __reducerSchema("karte_als_standard_setzen", KarteAlsStandardSetzenReducer),
+  __reducerSchema("karte_erstellen", KarteErstellenReducer),
   __reducerSchema("login", LoginReducer),
+  __reducerSchema("npc_erstellen", NpcErstellenReducer),
+  __reducerSchema("npc_loeschen", NpcLoeschenReducer),
+  __reducerSchema("npc_verschieben", NpcVerschiebenReducer),
   __reducerSchema("qi_sammeln", QiSammelnReducer),
   __reducerSchema("register", RegisterReducer),
   __reducerSchema("set_editor_password", SetEditorPasswordReducer),
+  __reducerSchema("spieler_loeschen", SpielerLoeschenReducer),
+  __reducerSchema("spieler_verschieben", SpielerVerschiebenReducer),
   __reducerSchema("update_position", UpdatePositionReducer),
 );
 
@@ -135,8 +196,14 @@ type __SchemaWithTableAccessorAliases = Omit<typeof tablesSchema.schemaType, "ta
     readonly "EditorSession": Omit<typeof tablesSchema.schemaType.tables["editorSession"], "accessorName"> & { readonly accessorName: "EditorSession" };
     /** @deprecated Use `loginAttempt` instead. This alias will be removed in the next major version. */
     readonly "LoginAttempt": Omit<typeof tablesSchema.schemaType.tables["loginAttempt"], "accessorName"> & { readonly accessorName: "LoginAttempt" };
+    /** @deprecated Use `npc` instead. This alias will be removed in the next major version. */
+    readonly "Npc": Omit<typeof tablesSchema.schemaType.tables["npc"], "accessorName"> & { readonly accessorName: "Npc" };
+    /** @deprecated Use `npcTickTimer` instead. This alias will be removed in the next major version. */
+    readonly "NpcTickTimer": Omit<typeof tablesSchema.schemaType.tables["npcTickTimer"], "accessorName"> & { readonly accessorName: "NpcTickTimer" };
     /** @deprecated Use `player` instead. This alias will be removed in the next major version. */
     readonly "Player": Omit<typeof tablesSchema.schemaType.tables["player"], "accessorName"> & { readonly accessorName: "Player" };
+    /** @deprecated Use `standardMap` instead. This alias will be removed in the next major version. */
+    readonly "StandardMap": Omit<typeof tablesSchema.schemaType.tables["standardMap"], "accessorName"> & { readonly accessorName: "StandardMap" };
     /** @deprecated Use `worldMeta` instead. This alias will be removed in the next major version. */
     readonly "WorldMeta": Omit<typeof tablesSchema.schemaType.tables["worldMeta"], "accessorName"> & { readonly accessorName: "WorldMeta" };
     /** @deprecated Use `worldTile` instead. This alias will be removed in the next major version. */
@@ -161,7 +228,10 @@ const REMOTE_MODULE = {
 const tableAccessorAliases = {
   "EditorSession": "editorSession",
   "LoginAttempt": "loginAttempt",
+  "Npc": "npc",
+  "NpcTickTimer": "npcTickTimer",
   "Player": "player",
+  "StandardMap": "standardMap",
   "WorldMeta": "worldMeta",
   "WorldTile": "worldTile",
 } as const;
@@ -188,8 +258,14 @@ export type DbView = __DbViewBase & {
   readonly "EditorSession": __DbViewBase["editorSession"];
   /** @deprecated Use `loginAttempt` instead. This alias will be removed in the next major version. */
   readonly "LoginAttempt": __DbViewBase["loginAttempt"];
+  /** @deprecated Use `npc` instead. This alias will be removed in the next major version. */
+  readonly "Npc": __DbViewBase["npc"];
+  /** @deprecated Use `npcTickTimer` instead. This alias will be removed in the next major version. */
+  readonly "NpcTickTimer": __DbViewBase["npcTickTimer"];
   /** @deprecated Use `player` instead. This alias will be removed in the next major version. */
   readonly "Player": __DbViewBase["player"];
+  /** @deprecated Use `standardMap` instead. This alias will be removed in the next major version. */
+  readonly "StandardMap": __DbViewBase["standardMap"];
   /** @deprecated Use `worldMeta` instead. This alias will be removed in the next major version. */
   readonly "WorldMeta": __DbViewBase["worldMeta"];
   /** @deprecated Use `worldTile` instead. This alias will be removed in the next major version. */
@@ -202,8 +278,14 @@ export type Tables = __TablesBase & {
   readonly "EditorSession": __TablesBase["editorSession"];
   /** @deprecated Use `loginAttempt` instead. This alias will be removed in the next major version. */
   readonly "LoginAttempt": __TablesBase["loginAttempt"];
+  /** @deprecated Use `npc` instead. This alias will be removed in the next major version. */
+  readonly "Npc": __TablesBase["npc"];
+  /** @deprecated Use `npcTickTimer` instead. This alias will be removed in the next major version. */
+  readonly "NpcTickTimer": __TablesBase["npcTickTimer"];
   /** @deprecated Use `player` instead. This alias will be removed in the next major version. */
   readonly "Player": __TablesBase["player"];
+  /** @deprecated Use `standardMap` instead. This alias will be removed in the next major version. */
+  readonly "StandardMap": __TablesBase["standardMap"];
   /** @deprecated Use `worldMeta` instead. This alias will be removed in the next major version. */
   readonly "WorldMeta": __TablesBase["worldMeta"];
   /** @deprecated Use `worldTile` instead. This alias will be removed in the next major version. */

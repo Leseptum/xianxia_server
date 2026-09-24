@@ -60,6 +60,9 @@ http://localhost:8081/?server=wss://maincloud.spacetimedb.com&db=xianxia
 - **Bewegung**: WASD oder Pfeiltasten.
 - **Qi sammeln**: Button unten rechts (+10 Qi).
 - **Durchbruch**: aktiv sobald Qi voll ist.
+- **Angreifen**: aktiv sobald ein NPC (Tier/Mensch/Fabelwesen) auf einem der 8 Nachbarfelder
+  steht. Jeder Klick zieht dem NPC feste 15 HP ab; bei 0 HP verschwindet er dauerhaft (kein
+  Respawn, keine Belohnung in dieser Version).
 - **M**: wechselt zwischen normaler Ansicht (Kamera folgt Spieler) und
   Kartenansicht (ganze Weltkarte, alle Spieler als Punkte).
 - **Logout**: verwirft die Identity dieses Tabs und lädt neu — danach kann
@@ -95,14 +98,41 @@ Danach beim Öffnen von `editor.html` das Passwort eingeben und
 Prompt, ein neuer Tab braucht das Passwort erneut, siehe "Mehrere Spieler
 gleichzeitig testen" unten für das Identity-pro-Tab-Prinzip).
 
-Nach dem Freischalten: lädt die aktuelle Karte, zeigt sie vergrößert
-(4px/Kachel) an. Links ein Biom-Pinsel (anklicken zum Auswählen) plus
-Ressourcenwerte (Kräuter, Spirit Stones, Holz, Erz) — Klicken/Ziehen auf der
-Karte malt die gewählte Biom-/Ressourcen-Kombination auf jede berührte Kachel
-und speichert sofort über den `edit_tile`-Reducer (`spacetimedb/Lib.cs`),
-serverseitig nur erlaubt für freigeschaltete Identities (siehe `CLAUDE.md`).
-Änderungen sind sofort für alle Spieler sichtbar (bzw. nach einem Reload/der
-nächsten Weltladung).
+Nach dem Freischalten lädt der Editor die erste Karte. Rechts oben im
+Panel: **Karten-Auswahl** — mehrere Karten können gleichzeitig existieren
+(siehe "Mehrere Karten" unten); "Neue Karte erstellen" legt mit Name/Seed/
+Wasseranteil/Skala eine komplett neue Welt an (dauert einige Sekunden, der
+Button zeigt währenddessen einen Status-Text), "Als Standard setzen" legt
+fest, auf welcher Karte neue `Register`-Aufrufe landen.
+
+Drei Werkzeug-Reiter:
+- **Terrain**: Biom-Pinsel (anklicken zum Auswählen) plus Ressourcenwerte
+  (Kräuter, Spirit Stones, Holz, Erz) — Klicken/Ziehen auf der Karte malt die
+  gewählte Kombination auf jede berührte Kachel, gespeichert über den
+  `edit_tile`-Reducer.
+- **NPC**: Art-Palette (Tier/Mensch/Fabelwesen-Unterarten) — Klick auf eine
+  leere Kachel platziert einen neuen NPC, Klick auf einen bestehenden wählt
+  ihn aus (danach Ziehen zum Verschieben), "NPC löschen" entfernt den
+  ausgewählten dauerhaft.
+- **Spieler**: Klick auf einen Spieler-Punkt wählt ihn aus (danach Ziehen
+  zum Verschieben, ohne die Wasser/Berg-Kollisionsprüfung des normalen
+  Spiels), "Spieler löschen" entfernt Account + Zugangsdaten vollständig.
+
+Mausrad (oder die +/−-Buttons oben rechts über der Karte) zoomt rein/raus.
+Hover über einer Kachel zeigt Biom-Name, Ressourcenwerte und — falls
+vorhanden — NPC-/Spieler-Info an, unabhängig vom aktiven Werkzeug.
+
+Alle Änderungen (Terrain, NPC, Spieler) sind serverseitig nur für
+freigeschaltete Identities erlaubt (siehe `CLAUDE.md`) und sofort für alle
+Spieler auf der jeweiligen Karte sichtbar.
+
+### Mehrere Karten
+
+Karten laufen **echt parallel**: Spieler auf unterschiedlichen Karten sehen
+sich gegenseitig nicht (weder im Spiel-Client noch dessen NPC-Bestand). Ein
+Spieler bleibt nach der Registrierung dauerhaft auf seiner Karte — es gibt
+aktuell keinen Karten-Wechsel im Spiel-Client, nur der Editor kann eine
+Karte zur neuen Standard-Karte für zukünftige Registrierungen machen.
 
 ## Mehrere Spieler gleichzeitig testen
 
@@ -111,7 +141,10 @@ isoliert (anders als `localStorage`, das sich alle Tabs desselben Origins
 teilen). **Einfach einen zweiten Tab auf dieselbe URL öffnen** bekommt
 automatisch eine eigene Identity und kann einen zweiten Spieler registrieren;
 beide Tabs sehen sich dann gegenseitig als Punkte auf der Karte, live über
-WebSocket-Subscriptions.
+WebSocket-Subscriptions — **sofern beide Registrierungen auf dieselbe
+Standard-Karte trafen** (siehe "Mehrere Karten" oben; ein Editor-Wechsel der
+Standard-Karte zwischen zwei Registrierungen platziert die Spieler auf
+unterschiedlichen, sich gegenseitig unsichtbaren Karten).
 Ein Reload behält die Identity des Tabs, Schließen des Tabs verwirft sie.
 
 ## Bekannte Einschränkungen (bewusste Vereinfachungen für den Testclient)

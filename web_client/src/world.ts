@@ -100,21 +100,21 @@ export class WorldGrid {
 }
 
 /**
- * Subscribes to world_meta/world_tile and, once the subscription is applied,
- * packs the (one-time, static) world into a WorldGrid. Replaces the old
- * client.sql("SELECT * FROM world_tile") one-shot fetch - the subscription
- * itself is still only used for this single initial load (the world never
- * changes outside the map editor), so no ongoing onInsert/onUpdate handling
- * is needed here.
+ * Subscribes to world_meta/world_tile (filtered to one map) and, once the
+ * subscription is applied, packs the (one-time, static per map) world into a
+ * WorldGrid. Replaces the old client.sql("SELECT * FROM world_tile") one-shot
+ * fetch - the subscription itself is still only used for this single initial
+ * load (a map's terrain never changes outside the map editor), so no ongoing
+ * onInsert/onUpdate handling is needed here.
  */
-export function loadWorld(connection: DbConnection): Promise<WorldGrid> {
+export function loadWorld(connection: DbConnection, mapId: number): Promise<WorldGrid> {
   return new Promise((resolve, reject) => {
     connection
       .subscriptionBuilder()
       .onApplied(() => {
-        const meta = connection.db.worldMeta.iter().next().value;
+        const meta = connection.db.worldMeta.MapId.find(mapId);
         if (!meta) {
-          reject(new Error("world_meta ist leer - wurde die Welt bereits generiert (Init-Reducer gelaufen)?"));
+          reject(new Error(`world_meta für Karte ${mapId} ist leer - wurde diese Karte bereits generiert?`));
           return;
         }
 
@@ -122,6 +122,7 @@ export function loadWorld(connection: DbConnection): Promise<WorldGrid> {
         const hoehe = meta.hoehe;
         const tileData = new Uint8Array(breite * hoehe * BYTES_PER_TILE);
         for (const tile of connection.db.worldTile.iter()) {
+          if (tile.mapId !== mapId) continue;
           const o = (tile.x + tile.y * breite) * BYTES_PER_TILE;
           tileData[o] = tile.biomTyp & 0xff;
           tileData[o + 1] = tile.kraeuterMenge & 0xff;
@@ -133,6 +134,9 @@ export function loadWorld(connection: DbConnection): Promise<WorldGrid> {
         resolve(new WorldGrid(breite, hoehe, tileData));
       })
       .onError((ctx) => reject(ctx.event ?? new Error("Subscription auf world_meta/world_tile fehlgeschlagen")))
-      .subscribe([tables.worldMeta, tables.worldTile]);
+      .subscribe([
+        tables.worldMeta.where((row) => row.mapId.eq(mapId)),
+        tables.worldTile.where((row) => row.mapId.eq(mapId)),
+      ]);
   });
 }

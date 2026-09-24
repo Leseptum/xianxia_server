@@ -1,8 +1,9 @@
 import { tables, type DbConnection } from "./module_bindings";
-import type { Player as PlayerRow } from "./module_bindings/types";
+import type { Player as PlayerRow, Npc as NpcRow } from "./module_bindings/types";
 import { connect, clearCachedIdentity } from "./connection";
 import { sha256Hex } from "./sha256";
 import { loadWorld, biomColorCss, BIOM, type WorldGrid } from "./world";
+import { NPC_ART_NAMES, NPC_KATEGORIE_FARBEN } from "./npc";
 import { CONFIG } from "./config";
 
 let connection: DbConnection | null = null;
@@ -101,11 +102,26 @@ async function handleAuth(action: (name: string, password: string) => Promise<Pl
   }
 }
 
+// Zweite, kartengefilterte Subscription (npc) - zusätzlich zur unfiltered player/loginAttempt-
+// Subscription aus boot() (bleibt unfiltered, weil findPlayerByName/der Namens-Duplikatscheck
+// weiterhin global über alle Karten gelten müssen). game.players wird stattdessen
+// client-seitig per localMapId gefiltert, siehe initGame/boot()'s onInsert/onUpdate.
+function subscribeToMap(connection: DbConnection, mapId: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    connection
+      .subscriptionBuilder()
+      .onApplied(() => resolve())
+      .onError((ctx) => reject(ctx.event ?? new Error("Subscription auf npc fehlgeschlagen")))
+      .subscribe([tables.npc.where((row) => row.mapId.eq(mapId))]);
+  });
+}
+
 async function startGame(playerRow: PlayerRow): Promise<void> {
   showScreen("loading");
   const loadingStatus = document.getElementById("loading-status")!;
   try {
-    const worldGrid = await loadWorld(connection!);
+    await subscribeToMap(connection!, playerRow.mapId);
+    const worldGrid = await loadWorld(connection!, playerRow.mapId);
     loadingStatus.textContent = "Fertig.";
     showScreen("game");
     initGame(playerRow, worldGrid);
@@ -138,12 +154,36 @@ export function toPlayerState(row: PlayerRow): PlayerState {
   };
 }
 
+interface NpcState {
+  npcId: bigint;
+  kategorie: number;
+  art: number;
+  posX: number;
+  posY: number;
+  hp: number;
+  hpMaximum: number;
+}
+
+function toNpcState(row: NpcRow): NpcState {
+  return {
+    npcId: row.npcId,
+    kategorie: row.kategorie,
+    art: row.art,
+    posX: row.posX,
+    posY: row.posY,
+    hp: row.hp,
+    hpMaximum: row.hpMaximum,
+  };
+}
+
 interface GameState {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   worldGrid: WorldGrid;
   localPlayerId: bigint;
+  localMapId: number;
   players: Map<bigint, PlayerState>;
+  npcs: Map<bigint, NpcState>;
   posX: number;
   posY: number;
   keys: Set<string>;
@@ -162,7 +202,13 @@ function initGame(localPlayerRow: PlayerRow, worldGrid: WorldGrid): void {
 
   const players = new Map<bigint, PlayerState>();
   for (const row of connection!.db.player.iter()) {
+    if (row.mapId !== localPlayerRow.mapId) continue;
     players.set(row.playerId, toPlayerState(row));
+  }
+
+  const npcs = new Map<bigint, NpcState>();
+  for (const row of connection!.db.npc.iter()) {
+    npcs.set(row.npcId, toNpcState(row));
   }
 
   game = {
@@ -170,7 +216,9 @@ function initGame(localPlayerRow: PlayerRow, worldGrid: WorldGrid): void {
     ctx,
     worldGrid,
     localPlayerId: localPlayerRow.playerId,
+    localMapId: localPlayerRow.mapId,
     players,
+    npcs,
     posX: Math.floor(localPlayerRow.posX),
     posY: Math.floor(localPlayerRow.posY),
     keys: new Set(),
@@ -198,6 +246,14 @@ function initGame(localPlayerRow: PlayerRow, worldGrid: WorldGrid): void {
   document.getElementById("breakthrough-button")!.addEventListener("click", () => {
     connection!.reducers
       .durchbruch({})
+      .then(clearError)
+      .catch((exc) => showError(exc instanceof Error ? exc.message : String(exc)));
+  });
+  document.getElementById("attack-button")!.addEventListener("click", () => {
+    const target = nearestNpcInRange();
+    if (!target) return;
+    connection!.reducers
+      .angreifen({ npcId: target.npcId })
       .then(clearError)
       .catch((exc) => showError(exc instanceof Error ? exc.message : String(exc)));
   });
@@ -311,9 +367,27 @@ function isWalkable(x: number, y: number): boolean {
   return biom !== null && biom !== BIOM.WASSER && biom !== BIOM.BERG;
 }
 
+// UX-only pre-check (button enabled/disabled) - the server's own range check in the
+// Angreifen reducer remains the actual authority, same relationship isWalkable has to
+// UpdatePosition's server-side collision check.
+function nearestNpcInRange(): NpcState | null {
+  let nearest: NpcState | null = null;
+  let nearestDist = Infinity;
+  for (const npc of game!.npcs.values()) {
+    const dist = Math.max(Math.abs(game!.posX - npc.posX), Math.abs(game!.posY - npc.posY));
+    if (dist <= 1 && dist < nearestDist) {
+      nearest = npc;
+      nearestDist = dist;
+    }
+  }
+  return nearest;
+}
+
 function updateHud(): void {
   const local = game!.players.get(game!.localPlayerId);
   const breakthroughButton = document.getElementById("breakthrough-button") as HTMLButtonElement;
+  const attackButton = document.getElementById("attack-button") as HTMLButtonElement;
+  attackButton.disabled = nearestNpcInRange() === null;
   if (!local) {
     document.getElementById("hud-name")!.textContent = "Warte auf Server-Daten...";
     document.getElementById("qi-text")!.textContent = "";
@@ -350,6 +424,7 @@ function render(): void {
   } else {
     drawWorld();
     drawPlayers();
+    drawNpcs();
   }
 }
 
@@ -400,6 +475,33 @@ function drawPlayers(): void {
   }
 }
 
+function drawNpcs(): void {
+  const { ctx } = game!;
+  const { camX, camY } = cameraOrigin();
+
+  for (const npc of game!.npcs.values()) {
+    const screenX = (npc.posX - camX) * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const screenY = (npc.posY - camY) * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, CONFIG.TILE_SIZE / 2 - 2, 0, 2 * Math.PI);
+    ctx.fillStyle = NPC_KATEGORIE_FARBEN[npc.kategorie];
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000";
+    ctx.stroke();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      `${NPC_ART_NAMES[npc.art]} ${npc.hp}/${npc.hpMaximum}`,
+      screenX,
+      screenY - CONFIG.TILE_SIZE / 2 - 4
+    );
+  }
+}
+
 function mapLayout() {
   const canvas = game!.canvas;
   const worldGrid = game!.worldGrid;
@@ -434,6 +536,16 @@ function drawFullMap(): void {
     ctx.fillStyle = isLocal ? "#ffd23c" : "#c850dc";
     ctx.fill();
   }
+
+  for (const npc of game!.npcs.values()) {
+    const px = originX + npc.posX * scale;
+    const py = originY + npc.posY * scale;
+
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = NPC_KATEGORIE_FARBEN[npc.kategorie];
+    ctx.fill();
+  }
 }
 
 // ---- Boot ----
@@ -446,9 +558,19 @@ function boot(): void {
     (conn) => {
       connection = conn;
 
-      conn.db.player.onInsert((_ctx, row) => game?.players.set(row.playerId, toPlayerState(row)));
-      conn.db.player.onUpdate((_ctx, _oldRow, row) => game?.players.set(row.playerId, toPlayerState(row)));
+      // player bleibt eine unfiltered Subscription (siehe subscribeToMap-Kommentar) - hier
+      // client-seitig auf die eigene Karte gefiltert, bevor eine Zeile in game.players landet.
+      conn.db.player.onInsert((_ctx, row) => {
+        if (game && row.mapId === game.localMapId) game.players.set(row.playerId, toPlayerState(row));
+      });
+      conn.db.player.onUpdate((_ctx, _oldRow, row) => {
+        if (game && row.mapId === game.localMapId) game.players.set(row.playerId, toPlayerState(row));
+      });
       conn.db.player.onDelete((_ctx, row) => game?.players.delete(row.playerId));
+
+      conn.db.npc.onInsert((_ctx, row) => game?.npcs.set(row.npcId, toNpcState(row)));
+      conn.db.npc.onUpdate((_ctx, _oldRow, row) => game?.npcs.set(row.npcId, toNpcState(row)));
+      conn.db.npc.onDelete((_ctx, row) => game?.npcs.delete(row.npcId));
 
       conn
         .subscriptionBuilder()

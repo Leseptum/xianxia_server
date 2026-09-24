@@ -6,21 +6,37 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AngreifenReducer from "../angreifen_reducer";
 import DurchbruchReducer from "../durchbruch_reducer";
 import EditorLoginReducer from "../editor_login_reducer";
 import EditTileReducer from "../edit_tile_reducer";
+import KarteAlsStandardSetzenReducer from "../karte_als_standard_setzen_reducer";
+import KarteErstellenReducer from "../karte_erstellen_reducer";
 import LoginReducer from "../login_reducer";
+import NpcErstellenReducer from "../npc_erstellen_reducer";
+import NpcLoeschenReducer from "../npc_loeschen_reducer";
+import NpcVerschiebenReducer from "../npc_verschieben_reducer";
 import QiSammelnReducer from "../qi_sammeln_reducer";
 import RegisterReducer from "../register_reducer";
 import SetEditorPasswordReducer from "../set_editor_password_reducer";
+import SpielerLoeschenReducer from "../spieler_loeschen_reducer";
+import SpielerVerschiebenReducer from "../spieler_verschieben_reducer";
 import UpdatePositionReducer from "../update_position_reducer";
 
+export type AngreifenParams = __Infer<typeof AngreifenReducer>;
 export type DurchbruchParams = __Infer<typeof DurchbruchReducer>;
 export type EditorLoginParams = __Infer<typeof EditorLoginReducer>;
 export type EditTileParams = __Infer<typeof EditTileReducer>;
+export type KarteAlsStandardSetzenParams = __Infer<typeof KarteAlsStandardSetzenReducer>;
+export type KarteErstellenParams = __Infer<typeof KarteErstellenReducer>;
 export type LoginParams = __Infer<typeof LoginReducer>;
+export type NpcErstellenParams = __Infer<typeof NpcErstellenReducer>;
+export type NpcLoeschenParams = __Infer<typeof NpcLoeschenReducer>;
+export type NpcVerschiebenParams = __Infer<typeof NpcVerschiebenReducer>;
 export type QiSammelnParams = __Infer<typeof QiSammelnReducer>;
 export type RegisterParams = __Infer<typeof RegisterReducer>;
 export type SetEditorPasswordParams = __Infer<typeof SetEditorPasswordReducer>;
+export type SpielerLoeschenParams = __Infer<typeof SpielerLoeschenReducer>;
+export type SpielerVerschiebenParams = __Infer<typeof SpielerVerschiebenReducer>;
 export type UpdatePositionParams = __Infer<typeof UpdatePositionReducer>;
 

@@ -34,8 +34,27 @@ export const LoginAttempt = __t.object("LoginAttempt", {
 });
 export type LoginAttempt = __Infer<typeof LoginAttempt>;
 
+export const Npc = __t.object("Npc", {
+  npcId: __t.u64(),
+  mapId: __t.u32(),
+  kategorie: __t.u8(),
+  art: __t.u8(),
+  posX: __t.i16(),
+  posY: __t.i16(),
+  hp: __t.u16(),
+  hpMaximum: __t.u16(),
+});
+export type Npc = __Infer<typeof Npc>;
+
+export const NpcTickTimer = __t.object("NpcTickTimer", {
+  scheduledId: __t.u64(),
+  scheduledAt: __t.scheduleAt(),
+});
+export type NpcTickTimer = __Infer<typeof NpcTickTimer>;
+
 export const Player = __t.object("Player", {
   playerId: __t.u64(),
+  mapId: __t.u32(),
   name: __t.string(),
   qi: __t.u64(),
   qiMaximum: __t.u64(),
@@ -45,17 +64,33 @@ export const Player = __t.object("Player", {
 });
 export type Player = __Infer<typeof Player>;
 
-export const WorldMeta = __t.object("WorldMeta", {
+export const PlayerSession = __t.object("PlayerSession", {
+  identity: __t.identity(),
+  playerId: __t.u64(),
+});
+export type PlayerSession = __Infer<typeof PlayerSession>;
+
+export const StandardMap = __t.object("StandardMap", {
   id: __t.u32(),
+  mapId: __t.u32(),
+});
+export type StandardMap = __Infer<typeof StandardMap>;
+
+export const WorldMeta = __t.object("WorldMeta", {
+  mapId: __t.u32(),
+  name: __t.string(),
   generiert: __t.bool(),
   seed: __t.i32(),
   breite: __t.i16(),
   hoehe: __t.i16(),
+  wasserAnteil: __t.f32(),
+  skala: __t.f32(),
 });
 export type WorldMeta = __Infer<typeof WorldMeta>;
 
 export const WorldTile = __t.object("WorldTile", {
-  tileId: __t.u32(),
+  tileId: __t.u64(),
+  mapId: __t.u32(),
   x: __t.i16(),
   y: __t.i16(),
   biomTyp: __t.u8(),

@@ -11,7 +11,8 @@ import {
 } from "spacetimedb";
 
 export default __t.row({
-  tileId: __t.u32().primaryKey().name("tile_id"),
+  tileId: __t.u64().primaryKey().name("tile_id"),
+  mapId: __t.u32().name("map_id"),
   x: __t.i16(),
   y: __t.i16(),
   biomTyp: __t.u8().name("biom_typ"),
