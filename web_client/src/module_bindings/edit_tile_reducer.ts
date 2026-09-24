@@ -11,6 +11,7 @@ import {
 } from "spacetimedb";
 
 export default {
+  mapId: __t.u32(),
   x: __t.i16(),
   y: __t.i16(),
   biomTyp: __t.u8(),

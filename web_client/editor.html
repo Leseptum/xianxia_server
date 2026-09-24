@@ -26,22 +26,62 @@
   <div id="editor-screen" class="hidden">
     <div id="editor-canvas-wrap">
       <canvas id="editor-canvas"></canvas>
+      <div id="zoom-controls">
+        <button type="button" id="zoom-out-button" aria-label="Rauszoomen">−</button>
+        <button type="button" id="zoom-in-button" aria-label="Reinzoomen">+</button>
+      </div>
     </div>
     <div id="editor-panel">
       <h1>Karteneditor</h1>
       <p id="editor-status">Lade Welt...</p>
       <p id="editor-hover">Kachel: -</p>
 
-      <h2>Biom</h2>
-      <div id="biom-palette"></div>
+      <h2>Karte</h2>
+      <select id="map-select"></select>
+      <button type="button" id="set-standard-button">Als Standard setzen</button>
+      <details id="new-map-form">
+        <summary>Neue Karte erstellen</summary>
+        <label>Name <input type="text" id="new-map-name" /></label>
+        <label>Seed <input type="number" id="new-map-seed" value="42" /></label>
+        <label>Wasseranteil <input type="number" id="new-map-wasser" min="0" max="1" step="0.01" value="0.30" /></label>
+        <label>Skala <input type="number" id="new-map-skala" min="0.001" step="0.001" value="0.035" /></label>
+        <button type="button" id="create-map-button">Erstellen</button>
+      </details>
 
-      <h2>Ressourcen</h2>
-      <label>Kräuter <input type="number" id="brush-kraeuter" min="0" max="255" value="0" /></label>
-      <label>Spirit Stones <input type="number" id="brush-spirit-stones" min="0" max="255" value="0" /></label>
-      <label>Holz <input type="number" id="brush-holz" min="0" max="255" value="0" /></label>
-      <label>Erz <input type="number" id="brush-erz" min="0" max="255" value="0" /></label>
+      <div id="tool-tabs">
+        <button type="button" class="tool-tab selected" data-tool="terrain">Terrain</button>
+        <button type="button" class="tool-tab" data-tool="npc">NPC</button>
+        <button type="button" class="tool-tab" data-tool="player">Spieler</button>
+      </div>
 
-      <p id="editor-hint">Klicken/Ziehen auf der Karte malt mit dem aktuellen Pinsel.</p>
+      <div id="terrain-panel">
+        <h2>Biom</h2>
+        <div id="biom-palette"></div>
+
+        <h2>Ressourcen</h2>
+        <label>Kräuter <input type="number" id="brush-kraeuter" min="0" max="255" value="0" /></label>
+        <label>Spirit Stones <input type="number" id="brush-spirit-stones" min="0" max="255" value="0" /></label>
+        <label>Holz <input type="number" id="brush-holz" min="0" max="255" value="0" /></label>
+        <label>Erz <input type="number" id="brush-erz" min="0" max="255" value="0" /></label>
+
+        <p class="editor-hint">Klicken/Ziehen auf der Karte malt mit dem aktuellen Pinsel.</p>
+      </div>
+
+      <div id="npc-panel" class="hidden">
+        <h2>NPC-Art</h2>
+        <div id="npc-palette"></div>
+        <p id="npc-selected-info">Kein NPC ausgewählt.</p>
+        <button type="button" id="npc-delete-button" disabled>NPC löschen</button>
+        <p class="editor-hint">Klick auf leere Kachel platziert einen NPC, Klick auf einen bestehenden wählt ihn aus (dann ziehen zum Verschieben).</p>
+      </div>
+
+      <div id="player-panel" class="hidden">
+        <h2>Spieler</h2>
+        <p id="player-selected-info">Kein Spieler ausgewählt.</p>
+        <button type="button" id="player-delete-button" disabled>Spieler löschen</button>
+        <p class="editor-hint">Klick auf einen Spieler wählt ihn aus (dann ziehen zum Verschieben).</p>
+      </div>
+
       <p id="error-banner" class="hidden"></p>
     </div>
   </div>

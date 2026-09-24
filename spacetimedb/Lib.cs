@@ -13,8 +13,33 @@ public static partial class Module
     private const float LACUNARITY  = 2.0f;
     private const float WASSER_ANTEIL = 0.30f;
     private const ulong QI_PRO_SAMMELN = 10;
+    private const ushort NPC_ANGRIFF_SCHADEN    = 15;
+    private const float  NPC_ANGRIFF_REICHWEITE = 1.0f; // Tiles, pro Achse (= 8 Nachbarfelder)
+
+    // TimeSpan.FromSeconds ist keine Compile-Time-Konstante, daher static readonly statt const.
+    private static readonly TimeSpan NPC_TICK_INTERVALL = TimeSpan.FromSeconds(3);
 
     private static readonly float[] LAND_SHARES = { 0.08f, 0.25f, 0.30f, 0.25f, 0.12f };
+
+    private static readonly ushort[] TIERE_HP      = { 20, 40, 70 };   // Hase, Wolf, Tiger
+    private static readonly ushort[] MENSCHEN_HP   = { 50, 60, 80 };   // Wanderer, Einsiedler, Raeuber
+    private static readonly ushort[] FABELWESEN_HP = { 90, 70, 130 };  // Fuchsgeist, KranichFee, Berggeist
+
+    // Indiziert nach Biom-Byte. Wasser/Berg immer 0 (unbegehbar -> keine Spawns, gleiche
+    // Regel wie UpdatePosition sie für Spieler durchsetzt). Schnee vorerst ebenfalls 0
+    // (auf Wunsch, keine unbegehbarkeits-Regel dahinter wie bei Wasser/Berg).
+    private static readonly float[] NPC_SPAWN_CHANCE = { 0f, 0.004f, 0.006f, 0.01f, 0f, 0f };
+
+    // Pro Biom Gewichte [Tiere, Menschen, Fabelwesen] (müssen nicht auf 1 summieren,
+    // werden in KategorieWuerfeln normalisiert).
+    private static readonly float[][] NPC_KATEGORIE_GEWICHTE = {
+        new float[] { 0f,   0f,   0f   }, // Wasser (ungenutzt)
+        new float[] { 0.30f,0.50f,0.20f}, // Strand
+        new float[] { 0.40f,0.50f,0.10f}, // Ebene
+        new float[] { 0.60f,0.10f,0.30f}, // Wald
+        new float[] { 0f,   0f,   0f   }, // Berg (ungenutzt)
+        new float[] { 0.20f,0.10f,0.70f}, // Schnee
+    };
 
     public enum Biom : byte
     {
@@ -26,10 +51,15 @@ public static partial class Module
         Schnee  = 5
     }
 
+    // TileId ist ein globaler Schlüssel = (MapId << 32) | (x + y*Breite), siehe WorldTileId() -
+    // damit bleibt die Kachel-Suche ein einfacher Einzelspalten-.Find() (O(1)) über mehrere
+    // Karten hinweg, ohne auf einen mehrspaltigen Index angewiesen zu sein (dessen
+    // Abfrage-Syntax in diesem SpacetimeDB-SDK nirgends dokumentiert ist).
     [SpacetimeDB.Table(Accessor = "WorldTile", Public = true)]
     public partial struct WorldTile
     {
-        [PrimaryKey] public uint  TileId;
+        [PrimaryKey] public ulong TileId;
+        [SpacetimeDB.Index.BTree] public uint MapId;
         public short  X;
         public short  Y;
         public byte   BiomTyp;
@@ -40,26 +70,157 @@ public static partial class Module
         public byte   Erz;
     }
 
+    // Eine Zeile pro Karte (nicht mehr Singleton) - MapId ist zugleich die Karten-ID.
     [SpacetimeDB.Table(Accessor = "WorldMeta", Public = true)]
     public partial struct WorldMeta
     {
-        [PrimaryKey] public uint  Id;
-        public bool  Generiert;
-        public int   Seed;
-        public short Breite;
-        public short Hoehe;
+        [PrimaryKey] [AutoInc] public uint MapId;
+        public string Name;
+        public bool   Generiert;
+        public int    Seed;
+        public short  Breite;
+        public short  Hoehe;
+        public float  WasserAnteil;
+        public float  Skala;
+    }
+
+    // Zeiger-Singleton (Id immer 0), analog zu EditorSecret: welche Karte neue
+    // Registrierungen bekommen. "Genau eine Zeile true" ist über [Unique] auf einem bool
+    // nicht ausdrückbar, daher ein separater Zeiger statt einer IstStandard-Spalte auf WorldMeta.
+    [SpacetimeDB.Table(Accessor = "StandardMap", Public = true)]
+    public partial struct StandardMap
+    {
+        [PrimaryKey] public uint Id; // immer 0
+        public uint MapId;
     }
 
     [SpacetimeDB.Table(Accessor = "Player", Public = true)]
     public partial struct Player
     {
         [PrimaryKey] public ulong PlayerId;
+        [SpacetimeDB.Index.BTree] public uint MapId;
         public string Name;
         public ulong  Qi;
         public ulong  QiMaximum;
         public byte   Stufe;
         public float  PosX;
         public float  PosY;
+    }
+
+    public enum NpcKategorie : byte
+    {
+        Tiere      = 0,
+        Menschen   = 1,
+        Fabelwesen = 2
+    }
+
+    // Flaches Roster, gruppiert nach Kategorie (0-2 Tiere, 3-5 Menschen, 6-8 Fabelwesen) -
+    // die Reihenfolge ist wichtig für ArtWuerfeln/HpFuerArt unten, nicht ohne Anpassung
+    // dort umsortieren.
+    public enum NpcArt : byte
+    {
+        Hase        = 0,
+        Wolf        = 1,
+        Tiger       = 2,
+        Wanderer    = 3,
+        Einsiedler  = 4,
+        Raeuber     = 5,
+        Fuchsgeist  = 6,
+        KranichFee  = 7,
+        Berggeist   = 8
+    }
+
+    // Statisches Verhaltensprofil pro NpcArt - ersetzt hand-kodierte Spezialfall-Zweige pro
+    // Spezies durch eine Datentabelle, die NpcTick generisch für jeden NPC ausliest.
+    // Beute-/BedrohungMaske sind Bitmasken über NpcArt (Bit i = NpcArt-Wert i), 9 Arten
+    // passen bequem in ushort. Reine Balancing-Daten, keine Architekturentscheidung - die
+    // konkrete Nahrungskette (wer jagt/flieht vor wem) lässt sich hier frei nachjustieren.
+    private struct NpcVerhalten
+    {
+        public bool   WandertBeiLeerlauf;   // bewegt sich zufällig, wenn nichts in Reichweite ist
+        public float  WanderChance;         // Wahrscheinlichkeit pro Tick für einen Leerlauf-Schritt (Drossel)
+        public byte   Wahrnehmungsradius;   // Tschebyschew-Distanz in Kacheln
+        public ushort BeuteMaske;           // NpcArt-Bits, die gejagt/angenähert werden
+        public ushort BedrohungMaske;       // NpcArt-Bits, vor denen geflohen wird
+        public bool   FliehtVorSpielern;    // behandelt nahe Spieler zusätzlich als Bedrohung
+        public bool   NaehertSichSpielern;  // behandelt nahe Spieler zusätzlich als "Beute" (nur Annäherung, kein Kampf)
+    }
+
+    private static ushort Maske(params NpcArt[] arten)
+    {
+        ushort m = 0;
+        foreach (var a in arten) m |= (ushort)(1 << (byte)a);
+        return m;
+    }
+
+    // Indiziert direkt per (byte)NpcArt (0-8) - flach, kein Banding wie bei HpFuerArt nötig.
+    private static readonly NpcVerhalten[] NPC_VERHALTEN =
+    {
+        // Hase (0): schreckhafte Beute, flieht vor Wolf/Tiger/Fuchsgeist und vor Spielern.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.20f, Wahrnehmungsradius = 5,
+            BeuteMaske = 0, BedrohungMaske = Maske(NpcArt.Wolf, NpcArt.Tiger, NpcArt.Fuchsgeist),
+            FliehtVorSpielern = true, NaehertSichSpielern = false },
+        // Wolf (1): jagt Hase, flieht vor Tiger und Berggeist.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.15f, Wahrnehmungsradius = 6,
+            BeuteMaske = Maske(NpcArt.Hase), BedrohungMaske = Maske(NpcArt.Tiger, NpcArt.Berggeist),
+            FliehtVorSpielern = false, NaehertSichSpielern = false },
+        // Tiger (2): Spitzenprädator, jagt Hase+Wolf, fürchtet nichts.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.12f, Wahrnehmungsradius = 7,
+            BeuteMaske = Maske(NpcArt.Hase, NpcArt.Wolf), BedrohungMaske = 0,
+            FliehtVorSpielern = false, NaehertSichSpielern = false },
+        // Wanderer (3): neutraler Reisender, flieht vor Raubtieren und Räubern.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.15f, Wahrnehmungsradius = 4,
+            BeuteMaske = 0, BedrohungMaske = Maske(NpcArt.Wolf, NpcArt.Tiger, NpcArt.Raeuber),
+            FliehtVorSpielern = false, NaehertSichSpielern = false },
+        // Einsiedler (4): bleibt meist an Ort, meidet Räuber und Besucher.
+        new NpcVerhalten { WandertBeiLeerlauf = false, WanderChance = 0.0f,  Wahrnehmungsradius = 3,
+            BeuteMaske = 0, BedrohungMaske = Maske(NpcArt.Raeuber),
+            FliehtVorSpielern = true, NaehertSichSpielern = false },
+        // Raeuber (5): jagt andere Menschen, pirscht sich auch an Spieler heran.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.20f, Wahrnehmungsradius = 6,
+            BeuteMaske = Maske(NpcArt.Wanderer, NpcArt.Einsiedler), BedrohungMaske = Maske(NpcArt.Tiger),
+            FliehtVorSpielern = false, NaehertSichSpielern = true },
+        // Fuchsgeist (6): Trickster, jagt Hase, flieht vor Berggeist.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.18f, Wahrnehmungsradius = 5,
+            BeuteMaske = Maske(NpcArt.Hase), BedrohungMaske = Maske(NpcArt.Berggeist),
+            FliehtVorSpielern = false, NaehertSichSpielern = false },
+        // KranichFee (7): scheu, flieht vor fast allem und vor Spielern.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.10f, Wahrnehmungsradius = 6,
+            BeuteMaske = 0, BedrohungMaske = Maske(NpcArt.Wolf, NpcArt.Tiger, NpcArt.Raeuber, NpcArt.Fuchsgeist),
+            FliehtVorSpielern = true, NaehertSichSpielern = false },
+        // Berggeist (8): stoischer Wächter, fürchtet nichts, bewegt sich selten.
+        new NpcVerhalten { WandertBeiLeerlauf = true,  WanderChance = 0.05f, Wahrnehmungsradius = 4,
+            BeuteMaske = 0, BedrohungMaske = 0,
+            FliehtVorSpielern = false, NaehertSichSpielern = false },
+    };
+
+    [SpacetimeDB.Table(Accessor = "Npc", Public = true)]
+    public partial struct Npc
+    {
+        [PrimaryKey] [AutoInc] public ulong NpcId;
+        [SpacetimeDB.Index.BTree] public uint MapId;
+        public byte   Kategorie;   // NpcKategorie
+        public byte   Art;         // NpcArt
+        public short  PosX;
+        public short  PosY;
+        public ushort Hp;
+        public ushort HpMaximum;
+    }
+
+    // Treibt NpcTick per Intervall an - erste geplante Reduktion in diesem Modul. Public =
+    // true folgt exakt dem in .windsurfrules/AGENTS.md dokumentierten Scheduled-Table-Muster;
+    // kein Client abonniert diese Tabelle (alle Subscriptions in app.ts/editor.ts/world.ts
+    // sind explizite Allow-Lists), daher kein Traffic-Impact.
+    [SpacetimeDB.Table(
+        Accessor    = "NpcTickTimer",
+        Scheduled   = nameof(NpcTick),
+        ScheduledAt = nameof(ScheduledAt),
+        Public      = true
+    )]
+    public partial struct NpcTickTimer
+    {
+        [PrimaryKey] [AutoInc] public ulong ScheduledId;
+        public ScheduleAt ScheduledAt;
     }
 
     // Not Public: password hashes must never be readable via the public SQL/subscription
@@ -116,23 +277,33 @@ public static partial class Module
     [SpacetimeDB.Reducer(ReducerKind.Init)]
     public static void Init(ReducerContext ctx)
     {
-        var meta = ctx.Db.WorldMeta.Id.Find(0);
-        if (meta != null && meta.Value.Generiert)
+        if (ctx.Db.WorldMeta.Iter().Any())
         {
-            Log.Info("Welt bereits generiert – überspringe.");
+            Log.Info("Welt(en) bereits vorhanden – überspringe.");
             return;
         }
 
         Log.Info($"Starte Weltgenerierung {WELT_BREITE}x{WELT_HOEHE} mit Seed {SEED}...");
-        WeltGenerieren(ctx);
-
-        ctx.Db.WorldMeta.Insert(new WorldMeta
+        var meta = ctx.Db.WorldMeta.Insert(new WorldMeta
         {
-            Id        = 0,
-            Generiert = true,
-            Seed      = SEED,
-            Breite    = WELT_BREITE,
-            Hoehe     = WELT_HOEHE
+            MapId        = 0, // AutoInc
+            Name         = "Standardwelt",
+            Generiert    = false,
+            Seed         = SEED,
+            Breite       = WELT_BREITE,
+            Hoehe        = WELT_HOEHE,
+            WasserAnteil = WASSER_ANTEIL,
+            Skala        = SCALE
+        });
+        WeltGenerieren(ctx, meta.MapId, SEED, WASSER_ANTEIL, SCALE);
+        NpcsPlatzieren(ctx, meta.MapId);
+        meta.Generiert = true;
+        ctx.Db.WorldMeta.MapId.Update(meta);
+        ctx.Db.StandardMap.Insert(new StandardMap { Id = 0, MapId = meta.MapId });
+        ctx.Db.NpcTickTimer.Insert(new NpcTickTimer
+        {
+            ScheduledId = 0, // AutoInc
+            ScheduledAt = new ScheduleAt.Interval(NPC_TICK_INTERVALL)
         });
         Log.Info("Weltgenerierung abgeschlossen!");
     }
@@ -149,6 +320,27 @@ public static partial class Module
         var session = ctx.Db.PlayerSession.Identity.Find(ctx.Sender);
         if (session != null) return session.Value.PlayerId;
         return (ulong)Math.Abs(ctx.Sender.GetHashCode());
+    }
+
+    // Globaler WorldTile-Schlüssel über mehrere Karten hinweg, siehe WorldTile-Kommentar oben.
+    private static ulong WorldTileId(uint mapId, int x, int y) =>
+        ((ulong)mapId << 32) | (uint)(x + y * WELT_BREITE);
+
+    // Einzige Quelle der Wahrheit für "kann hier etwas stehen" - von UpdatePosition (Spieler)
+    // und NpcsBewegen (NPCs) gemeinsam genutzt, statt zweimal inline dupliziert. Eine
+    // ungenerierte/nicht existente Kachel gilt als begehbar (gleiche Regel wie zuvor inline).
+    private static bool IstBegehbar(ReducerContext ctx, uint mapId, int x, int y)
+    {
+        var tile = ctx.Db.WorldTile.TileId.Find(WorldTileId(mapId, x, y));
+        return tile == null || (tile.Value.BiomTyp != (byte)Biom.Wasser && tile.Value.BiomTyp != (byte)Biom.Berg);
+    }
+
+    // Ob ctx.Sender aktuell für Editor-Reducer (EditTile, KarteErstellen, Npc-/Spieler-CRUD)
+    // freigeschaltet ist - separater Autorisierungskanal von SenderPlayerId, siehe EditorLogin.
+    private static bool EditorAuthorized(ReducerContext ctx)
+    {
+        var session = ctx.Db.EditorSession.Owner.Find(ctx.Sender);
+        return session != null && session.Value.Authorized;
     }
 
     [SpacetimeDB.Reducer]
@@ -168,9 +360,17 @@ public static partial class Module
             return;
         }
 
+        var standard = ctx.Db.StandardMap.Id.Find(0);
+        if (standard == null)
+        {
+            Log.Warn("Kein Standard-Kartenzeiger gesetzt - Registrierung abgelehnt.");
+            return;
+        }
+
         ctx.Db.Player.Insert(new Player
         {
             PlayerId  = playerId,
+            MapId     = standard.Value.MapId,
             Name      = name,
             Qi        = 0,
             QiMaximum = 100,
@@ -222,13 +422,11 @@ public static partial class Module
         var player = ctx.Db.Player.PlayerId.Find(SenderPlayerId(ctx));
         if (player == null) return;
 
+        var p = player.Value;
         float ix = Math.Clamp(x, 0, WELT_BREITE - 1);
         float iy = Math.Clamp(y, 0, WELT_HOEHE - 1);
-        var tile = ctx.Db.WorldTile.TileId.Find((uint)((int)ix + (int)iy * WELT_BREITE));
-        if (tile != null && (tile.Value.BiomTyp == (byte)Biom.Wasser || tile.Value.BiomTyp == (byte)Biom.Berg))
-            return;
+        if (!IstBegehbar(ctx, p.MapId, (int)ix, (int)iy)) return;
 
-        var p  = player.Value;
         p.PosX = ix;
         p.PosY = iy;
         ctx.Db.Player.PlayerId.Update(p);
@@ -264,16 +462,15 @@ public static partial class Module
     }
 
     [SpacetimeDB.Reducer]
-    public static void EditTile(ReducerContext ctx, short x, short y, byte biomTyp,
+    public static void EditTile(ReducerContext ctx, uint mapId, short x, short y, byte biomTyp,
         byte kraeuterMenge, byte spiritStones, byte holz, byte erz)
     {
-        var session = ctx.Db.EditorSession.Owner.Find(ctx.Sender);
-        if (session == null || !session.Value.Authorized) return;
+        if (!EditorAuthorized(ctx)) return;
 
         if (x < 0 || x >= WELT_BREITE || y < 0 || y >= WELT_HOEHE) return;
         if (biomTyp > (byte)Biom.Schnee) return;
 
-        var tile = ctx.Db.WorldTile.TileId.Find((uint)(x + y * WELT_BREITE));
+        var tile = ctx.Db.WorldTile.TileId.Find(WorldTileId(mapId, x, y));
         if (tile == null) return;
         var t = tile.Value;
         t.BiomTyp       = biomTyp;
@@ -321,9 +518,342 @@ public static partial class Module
         ctx.Db.Player.PlayerId.Update(p);
     }
 
-    private static void WeltGenerieren(ReducerContext ctx)
+    [SpacetimeDB.Reducer]
+    public static void Angreifen(ReducerContext ctx, ulong npcId)
     {
-        int[] perm = BuildPerm(SEED);
+        var player = ctx.Db.Player.PlayerId.Find(SenderPlayerId(ctx));
+        if (player == null) return;
+
+        var npc = ctx.Db.Npc.NpcId.Find(npcId);
+        if (npc == null) return;
+
+        var p = player.Value;
+        var n = npc.Value;
+        if (n.MapId != p.MapId) return;
+        if (Math.Abs(p.PosX - n.PosX) > NPC_ANGRIFF_REICHWEITE ||
+            Math.Abs(p.PosY - n.PosY) > NPC_ANGRIFF_REICHWEITE)
+            return;
+
+        int neuesHp = n.Hp - NPC_ANGRIFF_SCHADEN;
+        if (neuesHp <= 0)
+        {
+            ctx.Db.Npc.NpcId.Delete(npcId);
+            Log.Info($"NPC {n.Art} (#{n.NpcId}) wurde besiegt.");
+            return;
+        }
+
+        n.Hp = (ushort)neuesHp;
+        ctx.Db.Npc.NpcId.Update(n);
+    }
+
+    // Von NpcTickTimer (Interval) angetrieben - iteriert alle Karten, bewegt NPCs pro Karte
+    // unabhängig. Reine Bewegungs-Reaktion (Fliehen/Annähern), kein NPC-vs-NPC-Kampf/Fressen -
+    // das ist eine bewusst separat gehaltene, spätere Erweiterung (siehe Angreifen-Muster).
+    [SpacetimeDB.Reducer]
+    public static void NpcTick(ReducerContext ctx, NpcTickTimer timer)
+    {
+        foreach (var map in ctx.Db.WorldMeta.Iter())
+            NpcsBewegen(ctx, map.MapId);
+    }
+
+    // Erstellt eine neue Karte (Terrain + NPC-Population) mit editierbaren Kernparametern.
+    // Generiert inline über alle 65536 Kacheln - spürbar langsamer als ein normaler
+    // Reducer-Call (Sekunden, nicht Millisekunden); Editor-UI sollte dafür einen
+    // Busy-State zeigen statt ein sofortiges Ergebnis anzunehmen.
+    [SpacetimeDB.Reducer]
+    public static void KarteErstellen(ReducerContext ctx, string name, int seed, float wasserAnteil, float skala)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        if (wasserAnteil < 0f || wasserAnteil > 1f || skala <= 0f) return;
+
+        var meta = ctx.Db.WorldMeta.Insert(new WorldMeta
+        {
+            MapId        = 0, // AutoInc
+            Name         = name,
+            Generiert    = false,
+            Seed         = seed,
+            Breite       = WELT_BREITE,
+            Hoehe        = WELT_HOEHE,
+            WasserAnteil = wasserAnteil,
+            Skala        = skala
+        });
+        WeltGenerieren(ctx, meta.MapId, seed, wasserAnteil, skala);
+        NpcsPlatzieren(ctx, meta.MapId);
+        meta.Generiert = true;
+        ctx.Db.WorldMeta.MapId.Update(meta);
+        Log.Info($"Neue Karte erstellt: {name} (#{meta.MapId})");
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void KarteAlsStandardSetzen(ReducerContext ctx, uint mapId)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        if (ctx.Db.WorldMeta.MapId.Find(mapId) == null) return;
+        ctx.Db.StandardMap.Id.Update(new StandardMap { Id = 0, MapId = mapId });
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void NpcErstellen(ReducerContext ctx, uint mapId, byte kategorie, byte art, short x, short y)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        if (ctx.Db.WorldMeta.MapId.Find(mapId) == null) return;
+        if (x < 0 || x >= WELT_BREITE || y < 0 || y >= WELT_HOEHE) return;
+        if (kategorie > (byte)NpcKategorie.Fabelwesen || art > (byte)NpcArt.Berggeist) return;
+
+        ushort hp = HpFuerArt(art);
+        ctx.Db.Npc.Insert(new Npc
+        {
+            NpcId     = 0, // AutoInc
+            MapId     = mapId,
+            Kategorie = kategorie,
+            Art       = art,
+            PosX      = x,
+            PosY      = y,
+            Hp        = hp,
+            HpMaximum = hp
+        });
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void NpcVerschieben(ReducerContext ctx, ulong npcId, short x, short y)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        var npc = ctx.Db.Npc.NpcId.Find(npcId);
+        if (npc == null) return;
+        if (x < 0 || x >= WELT_BREITE || y < 0 || y >= WELT_HOEHE) return;
+
+        var n = npc.Value;
+        n.PosX = x;
+        n.PosY = y;
+        ctx.Db.Npc.NpcId.Update(n);
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void NpcLoeschen(ReducerContext ctx, ulong npcId)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        ctx.Db.Npc.NpcId.Delete(npcId);
+    }
+
+    // Bewusste, dokumentierte Ausnahme von "nie client-gelieferte playerId annehmen": die
+    // Autorisierung läuft hier über den separaten EditorSession-Kanal (nicht über die
+    // Spieler-Identität selbst) - analog dazu, wie EditTile bereits beliebige WorldTile-Zeilen
+    // ändern darf. Keine Wiederholung der ursprünglichen, längst gefixten
+    // Impersonations-Lücke (die betraf normale Gameplay-Reducer ganz ohne separate Autorisierung).
+    [SpacetimeDB.Reducer]
+    public static void SpielerVerschieben(ReducerContext ctx, ulong playerId, float x, float y)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        var player = ctx.Db.Player.PlayerId.Find(playerId);
+        if (player == null) return;
+
+        var p = player.Value;
+        p.PosX = Math.Clamp(x, 0, WELT_BREITE - 1);
+        p.PosY = Math.Clamp(y, 0, WELT_HOEHE - 1);
+        ctx.Db.Player.PlayerId.Update(p);
+    }
+
+    [SpacetimeDB.Reducer]
+    public static void SpielerLoeschen(ReducerContext ctx, ulong playerId)
+    {
+        if (!EditorAuthorized(ctx)) return;
+        ctx.Db.Player.PlayerId.Delete(playerId);
+        ctx.Db.Credential.PlayerId.Delete(playerId);
+        foreach (var session in ctx.Db.PlayerSession.Iter())
+        {
+            if (session.PlayerId != playerId) continue;
+            ctx.Db.PlayerSession.Identity.Delete(session.Identity);
+            break;
+        }
+    }
+
+    private static void NpcsPlatzieren(ReducerContext ctx, uint mapId)
+    {
+        foreach (var tile in ctx.Db.WorldTile.MapId.Filter(mapId))
+        {
+            if (tile.BiomTyp == (byte)Biom.Wasser || tile.BiomTyp == (byte)Biom.Berg) continue;
+
+            float chance = NPC_SPAWN_CHANCE[tile.BiomTyp];
+            if (chance <= 0f || ctx.Rng.NextDouble() >= chance) continue;
+
+            var kategorie = KategorieWuerfeln(ctx, NPC_KATEGORIE_GEWICHTE[tile.BiomTyp]);
+            byte art = ArtWuerfeln(ctx, kategorie);
+            ushort hp = HpFuerArt(art);
+
+            ctx.Db.Npc.Insert(new Npc
+            {
+                NpcId     = 0, // AutoInc
+                MapId     = mapId,
+                Kategorie = (byte)kategorie,
+                Art       = art,
+                PosX      = tile.X,
+                PosY      = tile.Y,
+                Hp        = hp,
+                HpMaximum = hp
+            });
+        }
+    }
+
+    private static NpcKategorie KategorieWuerfeln(ReducerContext ctx, float[] gewichte)
+    {
+        float summe = gewichte[0] + gewichte[1] + gewichte[2];
+        float r = (float)ctx.Rng.NextDouble() * summe;
+        if (r < gewichte[0]) return NpcKategorie.Tiere;
+        if (r < gewichte[0] + gewichte[1]) return NpcKategorie.Menschen;
+        return NpcKategorie.Fabelwesen;
+    }
+
+    private static byte ArtWuerfeln(ReducerContext ctx, NpcKategorie kategorie)
+    {
+        int index = ctx.Rng.Next(0, 3);
+        return kategorie switch
+        {
+            NpcKategorie.Tiere    => (byte)((byte)NpcArt.Hase + index),
+            NpcKategorie.Menschen => (byte)((byte)NpcArt.Wanderer + index),
+            _                     => (byte)((byte)NpcArt.Fuchsgeist + index),
+        };
+    }
+
+    private static ushort HpFuerArt(byte art)
+    {
+        if (art <= (byte)NpcArt.Tiger)   return TIERE_HP[art - (byte)NpcArt.Hase];
+        if (art <= (byte)NpcArt.Raeuber) return MENSCHEN_HP[art - (byte)NpcArt.Wanderer];
+        return FABELWESEN_HP[art - (byte)NpcArt.Fuchsgeist];
+    }
+
+    // Ein Durchlauf pro NPC dieser Karte: Bedrohung sehen -> fliehen, sonst Beute sehen ->
+    // annähern, sonst (mit WanderChance) ein zufälliger Leerlauf-Schritt. Bewegt sich der NPC
+    // diesen Tick nicht, bleibt es bei keinem Update-Aufruf - das ist die Haupt-Drossel gegen
+    // Schreib-/Netzwerklast bei ~250 NPCs/Karte.
+    private static void NpcsBewegen(ReducerContext ctx, uint mapId)
+    {
+        var npcs = new List<Npc>(ctx.Db.Npc.MapId.Filter(mapId));
+        if (npcs.Count == 0) return;
+        var players = new List<Player>(ctx.Db.Player.MapId.Filter(mapId));
+
+        foreach (var npc in npcs)
+        {
+            var profil = NPC_VERHALTEN[npc.Art];
+
+            if (NaechstesZiel(npc, npcs, players, profil.BedrohungMaske, profil.FliehtVorSpielern,
+                    profil.Wahrnehmungsradius, out int bx, out int by))
+            {
+                if (SchrittRichtung(ctx, mapId, npc.PosX, npc.PosY, bx, by, weg: true, out short nx, out short ny))
+                    AktualisierePosition(ctx, npc, nx, ny);
+                continue;
+            }
+
+            if (NaechstesZiel(npc, npcs, players, profil.BeuteMaske, profil.NaehertSichSpielern,
+                    profil.Wahrnehmungsradius, out int px, out int py))
+            {
+                if (SchrittRichtung(ctx, mapId, npc.PosX, npc.PosY, px, py, weg: false, out short nx, out short ny))
+                    AktualisierePosition(ctx, npc, nx, ny);
+                continue;
+            }
+
+            if (profil.WandertBeiLeerlauf && ctx.Rng.NextDouble() < profil.WanderChance
+                && ZufaelligerSchritt(ctx, mapId, npc.PosX, npc.PosY, out short wx, out short wy))
+            {
+                AktualisierePosition(ctx, npc, wx, wy);
+            }
+        }
+    }
+
+    // Nächstes Ziel (NPC-Art in artMaske, optional plus Spieler) innerhalb radius, nach
+    // Tschebyschew-Distanz - bei mehreren Treffern gewinnt das nächste.
+    private static bool NaechstesZiel(Npc self, List<Npc> npcs, List<Player> players, ushort artMaske,
+        bool inklusiveSpieler, byte radius, out int zx, out int zy)
+    {
+        zx = 0; zy = 0;
+        int besteDistanz = radius + 1;
+        bool gefunden = false;
+
+        if (artMaske != 0)
+        {
+            foreach (var other in npcs)
+            {
+                if (other.NpcId == self.NpcId) continue;
+                if ((artMaske & (1 << other.Art)) == 0) continue;
+                int dist = Math.Max(Math.Abs(other.PosX - self.PosX), Math.Abs(other.PosY - self.PosY));
+                if (dist <= radius && dist < besteDistanz)
+                {
+                    besteDistanz = dist; zx = other.PosX; zy = other.PosY; gefunden = true;
+                }
+            }
+        }
+
+        if (inklusiveSpieler)
+        {
+            foreach (var p in players)
+            {
+                int px = (int)Math.Round(p.PosX), py = (int)Math.Round(p.PosY);
+                int dist = Math.Max(Math.Abs(px - self.PosX), Math.Abs(py - self.PosY));
+                if (dist <= radius && dist < besteDistanz)
+                {
+                    besteDistanz = dist; zx = px; zy = py; gefunden = true;
+                }
+            }
+        }
+
+        return gefunden;
+    }
+
+    // Greedy ein-Kachel-Schritt Richtung (weg=false) oder von (weg=true) einem Ziel - bewusst
+    // keine Pfadsuche. Unter allen begehbaren Nachbarn wird der mit der besten
+    // Distanzänderung zum Ziel gewählt; ist keiner begehbar, bleibt der NPC diesen Tick stehen.
+    private static bool SchrittRichtung(ReducerContext ctx, uint mapId, short x, short y, int zielX, int zielY,
+        bool weg, out short nx, out short ny)
+    {
+        nx = x; ny = y;
+        bool gefunden = false;
+        int besteBewertung = 0;
+
+        for (int ndx = -1; ndx <= 1; ndx++)
+        for (int ndy = -1; ndy <= 1; ndy++)
+        {
+            if (ndx == 0 && ndy == 0) continue;
+            int cx = x + ndx, cy = y + ndy;
+            if (cx < 0 || cx >= WELT_BREITE || cy < 0 || cy >= WELT_HOEHE) continue;
+            if (!IstBegehbar(ctx, mapId, cx, cy)) continue;
+
+            int distZiel = Math.Max(Math.Abs(cx - zielX), Math.Abs(cy - zielY));
+            int bewertung = weg ? distZiel : -distZiel; // größer ist immer besser
+            if (!gefunden || bewertung > besteBewertung)
+            {
+                besteBewertung = bewertung; nx = (short)cx; ny = (short)cy; gefunden = true;
+            }
+        }
+        return gefunden;
+    }
+
+    private static bool ZufaelligerSchritt(ReducerContext ctx, uint mapId, short x, short y, out short nx, out short ny)
+    {
+        var kandidaten = new List<(short, short)>();
+        for (int ndx = -1; ndx <= 1; ndx++)
+        for (int ndy = -1; ndy <= 1; ndy++)
+        {
+            if (ndx == 0 && ndy == 0) continue;
+            int cx = x + ndx, cy = y + ndy;
+            if (cx < 0 || cx >= WELT_BREITE || cy < 0 || cy >= WELT_HOEHE) continue;
+            if (!IstBegehbar(ctx, mapId, cx, cy)) continue;
+            kandidaten.Add(((short)cx, (short)cy));
+        }
+
+        if (kandidaten.Count == 0) { nx = x; ny = y; return false; }
+        (nx, ny) = kandidaten[ctx.Rng.Next(kandidaten.Count)];
+        return true;
+    }
+
+    private static void AktualisierePosition(ReducerContext ctx, Npc npc, short x, short y)
+    {
+        npc.PosX = x;
+        npc.PosY = y;
+        ctx.Db.Npc.NpcId.Update(npc);
+    }
+
+    private static void WeltGenerieren(ReducerContext ctx, uint mapId, int seed, float wasserAnteil, float skala)
+    {
+        int[] perm = BuildPerm(seed);
 
         float[] rohdaten = new float[WELT_BREITE * WELT_HOEHE];
         float min = float.MaxValue, max = float.MinValue;
@@ -331,7 +861,7 @@ public static partial class Module
         for (int y = 0; y < WELT_HOEHE; y++)
         for (int x = 0; x < WELT_BREITE; x++)
         {
-            float v = OctaveNoise(perm, x * SCALE, y * SCALE, OKTAVEN, PERSISTENZ, LACUNARITY);
+            float v = OctaveNoise(perm, x * skala, y * skala, OKTAVEN, PERSISTENZ, LACUNARITY);
             rohdaten[x + y * WELT_BREITE] = v;
             if (v < min) min = v;
             if (v > max) max = v;
@@ -343,20 +873,20 @@ public static partial class Module
 
         float[] sortiert = (float[])rohdaten.Clone();
         Array.Sort(sortiert);
-        float wasserSchwelle = sortiert[(int)(WASSER_ANTEIL * sortiert.Length)];
+        float wasserSchwelle = sortiert[(int)(wasserAnteil * sortiert.Length)];
 
         float[] landSchwellen = new float[LAND_SHARES.Length];
         float kumulativ = 0f;
         for (int i = 0; i < LAND_SHARES.Length; i++)
         {
             kumulativ += LAND_SHARES[i];
-            float quantil = WASSER_ANTEIL + (1f - WASSER_ANTEIL) * kumulativ;
+            float quantil = wasserAnteil + (1f - wasserAnteil) * kumulativ;
             int idx = (int)(quantil * (sortiert.Length - 1));
             idx = Math.Clamp(idx, 0, sortiert.Length - 1);
             landSchwellen[i] = sortiert[idx];
         }
 
-        var rng = new Random(SEED + 1);
+        var rng = new Random(seed + 1);
 
         for (int y = 0; y < WELT_HOEHE; y++)
         for (int x = 0; x < WELT_BREITE; x++)
@@ -366,7 +896,8 @@ public static partial class Module
 
             ctx.Db.WorldTile.Insert(new WorldTile
             {
-                TileId         = (uint)(x + y * WELT_BREITE),
+                TileId         = WorldTileId(mapId, x, y),
+                MapId          = mapId,
                 X              = (short)x,
                 Y              = (short)y,
                 BiomTyp        = (byte)biom,

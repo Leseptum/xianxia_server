@@ -12,6 +12,7 @@ import {
 
 export default __t.row({
   playerId: __t.u64().primaryKey().name("player_id"),
+  mapId: __t.u32().name("map_id"),
   name: __t.string(),
   qi: __t.u64(),
   qiMaximum: __t.u64().name("qi_maximum"),

@@ -10,13 +10,6 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default __t.row({
-  mapId: __t.u32().primaryKey().name("map_id"),
-  name: __t.string(),
-  generiert: __t.bool(),
-  seed: __t.i32(),
-  breite: __t.i16(),
-  hoehe: __t.i16(),
-  wasserAnteil: __t.f32().name("wasser_anteil"),
-  skala: __t.f32(),
-});
+export default {
+  mapId: __t.u32(),
+};
