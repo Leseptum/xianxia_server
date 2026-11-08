@@ -35,9 +35,9 @@ export const CONFIG = {
   DATABASE_NAME: params.get("db") || "xianxia",
   STEP_INTERVAL_MS: 150, // Zeit zwischen zwei Feld-Schritten bei gehaltener Taste (wie web_client)
 
-  // Schrägansicht, nicht gedreht: Kacheln vertikal gestaucht - siehe src/logic/projection.ts.
+  // Top-Down, nicht gedreht, quadratische Kacheln - siehe src/logic/projection.ts.
   TILE_WIDTH: 64,
-  TILE_HEIGHT: 40,
+  TILE_HEIGHT: 64,
 
   // Interpolation zwischen Positionsupdates (src/logic/interpolation.ts).
   // Spieler laufen im STEP_INTERVAL_MS-Takt -> gleiche Dauer ergibt eine durchgehende

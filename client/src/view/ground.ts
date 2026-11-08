@@ -13,7 +13,7 @@ export interface Ground {
 
 /**
  * Baut aus dem WorldGrid eine orthogonale Phaser-Tilemap (ein Tile pro Biom, Kacheln
- * tileWidth x tileHeight, vertikal gestaucht - siehe logic/projection.ts).
+ * tileWidth x tileHeight - siehe logic/projection.ts).
  *
  * Phaser legt die linke obere Ecke von Tile (x, y) auf (x*w, y*h) relativ zur Layer-Position -
  * der Layer wird daher um (-w/2, -h/2) verschoben, damit Tile-MITTEN auf tileToWorld liegen,

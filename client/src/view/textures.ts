@@ -57,8 +57,7 @@ function createBiomeTileset(scene: Phaser.Scene, w: number, h: number): void {
 
     drawBiomeDetail(ctx, biom, ox, oy, w, h);
 
-    // Dezente Kante unten/rechts -> das Gitter bleibt lesbar, die untere Kante betont die
-    // Schrägansicht leicht.
+    // Dezente Kante unten/rechts -> das Gitter bleibt lesbar.
     ctx.fillStyle = "rgba(0,0,0,0.12)";
     ctx.fillRect(ox, oy + h - 2, w, 2);
     ctx.fillStyle = "rgba(0,0,0,0.07)";
@@ -167,7 +166,7 @@ function createCreatureTexture(scene: Phaser.Scene): void {
   tex.refresh();
 }
 
-/** Markierungsring unter dem eigenen Spieler (flache Ellipse, passend zur Schrägansicht). */
+/** Markierungsring unter dem eigenen Spieler (flache Ellipse als Bodenmarkierung). */
 function createRingTexture(scene: Phaser.Scene): void {
   const tex = scene.textures.createCanvas(TEXTURES.ring, 44, 22);
   if (!tex) throw new Error("Konnte Ring-Textur nicht anlegen.");

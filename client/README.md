@@ -1,7 +1,7 @@
 # Xianxia-Spielclient (Phaser 3)
 
 Der eigentliche Spielclient: Phaser 3 + TypeScript (Vite, offizielles `spacetimedb`-SDK),
-Schrägansicht von oben (nicht gedreht: Norden = oben; Kacheln 64×40). Spricht mit demselben SpacetimeDB-Modul
+Ansicht von oben mit aufrechten Figuren (nicht gedreht: Norden = oben; quadratische Kacheln 64×64). Spricht mit demselben SpacetimeDB-Modul
 (`spacetimedb/Lib.cs`) wie der ältere Top-Down-Testclient `web_client/`, der als Testwerkzeug und
 für den Karteneditor (`web_client/editor.html`) bestehen bleibt.
 

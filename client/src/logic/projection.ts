@@ -1,4 +1,4 @@
-// Schräg-von-oben-Ansicht (3/4-Perspektive), nicht gedreht: Kartennorden = Bildschirm oben.
+// Top-Down-Ansicht mit aufrecht stehenden Figuren, nicht gedreht: Kartennorden = Bildschirm oben.
 // Konvention für den ganzen Client:
 //
 //   Kachel (x, y) hat ihren MITTELPUNKT bei
@@ -6,8 +6,9 @@
 //     worldY = y * tileHeight
 //
 // d. h. Gitter-x läuft nach rechts, Gitter-y nach unten (wie web_client und Karteneditor).
-// tileHeight < tileWidth staucht den Boden vertikal - zusammen mit aufrecht stehenden,
-// nach Y sortierten Figuren entsteht der Eindruck, schräg von oben auf die Welt zu schauen.
+// Die Kacheln sind quadratisch (CONFIG.TILE_WIDTH = TILE_HEIGHT); die Funktionen hier
+// erlauben aber beliebige Seitenverhältnisse (die Tests nutzen bewusst ein nicht-quadratisches,
+// damit vertauschte Achsen auffallen). Figuren stehen aufrecht und werden nach Y sortiert.
 // Ganzzahlige Gitterkoordinaten (so speichert der Server Spieler-/NPC-Positionen) liegen genau
 // auf Kachelmitten, Bruchteile (Interpolation) werden linear dazwischen projiziert.
 //
