@@ -5,17 +5,19 @@ Ein 2D Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 ## Tech Stack
 
 - **Backend:** SpacetimeDB (C# Modul, `spacetimedb/`)
-- **Client:** aktuell nur `web_client/` — ein TypeScript-Testclient (Vite + offizielles `spacetimedb`-SDK, Top-Down-Grid-Rendering, kein Isometrie) zum Ausprobieren der Reducer/Tabellen ohne echten Spiel-Client, siehe `web_client/README.md`. Ob der finale Client dabei bleibt oder auf Godot 4 (.NET) umgestellt wird, ist noch offen — im Repo existiert bislang kein Godot-Projekt.
+- **Spielclient:** `client/` — Phaser 3 + TypeScript (Vite, offizielles `spacetimedb`-SDK), isometrische Darstellung, siehe `client/README.md`. Ein Godot-Client ist nicht (mehr) geplant.
+- **Testclient & Karteneditor:** `web_client/` — älterer TypeScript-Testclient (Top-Down, ohne Phaser) zum schnellen Ausprobieren der Reducer/Tabellen, plus der Karteneditor `web_client/editor.html`, siehe `web_client/README.md`.
 - **Welt:** 256×256 Tilemap, Perlin-Noise-generiert, 6 Biome
 
 ## Features
 
-- Multiplayer über SpacetimeDB — Positions-Updates laufen live über WebSocket-Subscriptions (offizielles SDK, kein Polling)
+- Multiplayer über SpacetimeDB — Positions-Updates laufen live über WebSocket-Subscriptions (offizielles SDK, kein Polling), im Spielclient mit Interpolation zwischen den Updates
+- Isometrische Weltkarte (Phaser-Tilemap), Kamera folgt dem Spieler, Zoom per Mausrad
 - Prozedural generierte Welt (Wasser, Strand, Ebene, Wald, Berg, Schnee)
 - Qi-Kultivierungssystem mit Durchbruch-Mechanik
 - Login & Registrierung mit SHA256-Passwort-Hashing
-- Statische NPCs (Tiere, Menschen, Fabelwesen) bevölkern die Karte, angreifbar mit HP-basiertem Kampf (kein Respawn/Loot bisher)
-- Karteneditor (`web_client/editor.html`) zum Bemalen von Biomen/Ressourcen pro Kachel
+- NPCs (Tiere, Menschen, Fabelwesen) bevölkern die Karte, bewegen sich per Server-Tick und sind angreifbar (HP-basiert, kein Respawn/Loot bisher)
+- Mehrere Karten parallel, Karteneditor (`web_client/editor.html`) für Biome/Ressourcen, NPCs und Spieler
 
 ## Geplant
 
@@ -32,26 +34,25 @@ Ein 2D Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 
 - .NET SDK 8.0
 - SpacetimeDB CLI (Modul nutzt `SpacetimeDB.Runtime` 2.3.x; getestete CLI-Version 2.7.0)
-- Node.js 22+ (für `web_client/`, Vite + `spacetimedb`-SDK)
+- Node.js 22+ (für `client/` und `web_client/`, jeweils Vite + `spacetimedb`-SDK)
 - Linux (getestet unter Ubuntu 24.04 / WSL2)
 
 ### Server starten
 
 ```bash
-cd spacetimedb
 spacetime start
-spacetime publish --server local xianxia
+scripts/publish.sh local
 ```
 
-### Client starten
+### Spielclient starten
 
 ```bash
-cd web_client
+cd client
 npm install
 npm run dev
 ```
 
-Details, Steuerung und Mehrspieler-Test siehe `web_client/README.md`.
+Details und Steuerung siehe `client/README.md`; Testclient und Karteneditor siehe `web_client/README.md`.
 
 ## Lizenz
 
