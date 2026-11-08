@@ -5,14 +5,14 @@ import type { GameClient } from "../net/GameClient";
 import type { WorldSession } from "../net/WorldSession";
 import { directionFromKeys } from "../logic/movement";
 import { chebyshev } from "../logic/interpolation";
-import { isoMapBounds, tileToWorld, type IsoMetrics, type Point } from "../logic/iso";
+import { mapBounds, tileToWorld, type TileMetrics, type Point } from "../logic/projection";
 import { NPC_ART_NAMES, NPC_KATEGORIE_FARBEN } from "../npc";
-import { createIsoGround, type IsoGround } from "../view/isoGround";
+import { createGround, type Ground } from "../view/ground";
 import { EntityView, type EntityStyle } from "../view/EntityView";
 import { TEXTURES } from "../view/textures";
 import { SCENES, type WorldSceneData } from "./keys";
 
-const METRICS: IsoMetrics = { tileWidth: CONFIG.TILE_WIDTH, tileHeight: CONFIG.TILE_HEIGHT };
+const METRICS: TileMetrics = { tileWidth: CONFIG.TILE_WIDTH, tileHeight: CONFIG.TILE_HEIGHT };
 // Kamera zielt ~eine halbe Figurenhöhe über den Fußpunkt, damit die Figur mittig im Bild steht.
 const CAMERA_OFFSET_Y = 20;
 
@@ -27,14 +27,14 @@ const npcStyle = (kategorie: number): EntityStyle => ({
 type HeldKeys = Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key[]>;
 
 /**
- * Spielwelt: isometrische Tilemap der Karte, Spieler + NPCs live aus der WorldSession
+ * Spielwelt: Tilemap der Karte in Schrägansicht (nicht gedreht, Norden = oben), Spieler + NPCs live aus der WorldSession
  * (interpoliert), eigene Bewegung per WASD/Pfeiltasten, Kamera folgt, Mausrad zoomt.
  * Startet die HudScene parallel als eigene Szene (eigene, ungezoomte Kamera).
  */
 export class WorldScene extends Phaser.Scene {
   private client!: GameClient;
   private session!: WorldSession;
-  private ground!: IsoGround;
+  private ground!: Ground;
   private readonly playerViews = new Map<bigint, EntityView>();
   private readonly npcViews = new Map<bigint, EntityView>();
   private heldKeys!: HeldKeys;
@@ -55,7 +55,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.ground = createIsoGround(this, this.session.worldGrid, METRICS);
+    this.ground = createGround(this, this.session.worldGrid, METRICS);
 
     const now = performance.now();
     for (const row of this.session.players.values()) this.upsertPlayer(row, now);
@@ -167,7 +167,7 @@ export class WorldScene extends Phaser.Scene {
 
   private setupCamera(): void {
     const cam = this.cameras.main;
-    const b = isoMapBounds(this.session.worldGrid.breite, this.session.worldGrid.hoehe, METRICS);
+    const b = mapBounds(this.session.worldGrid.breite, this.session.worldGrid.hoehe, METRICS);
     const pad = 8 * CONFIG.TILE_WIDTH;
     cam.setBounds(b.x - pad, b.y - pad, b.width + 2 * pad, b.height + 2 * pad);
     cam.setZoom(CONFIG.ZOOM_DEFAULT);

@@ -37,17 +37,10 @@ export function createPlaceholderTextures(scene: Phaser.Scene, tileWidth: number
 }
 
 /**
- * Pixelgenaue 2:1-Raute als horizontale Zeilen: Zeile k (von oben/unten) ist 4(k+1) px breit.
- * Bewusst ohne Antialiasing (fillRect statt Pfad) - so überlappen sich benachbarte Rauten um
- * genau 2 px und es entstehen auch bei gebrochenem Zoom keine Haarlinien-Lücken zwischen Tiles.
+ * Ein Tile pro Biom als volles Rechteck. Die Grundfarbe wird um 1 px in Rand/Abstand des
+ * Tilesets hinein "extrudiert" - so blutet bei gebrochenem Zoom (lineares Filtering) keine
+ * fremde Farbe in die Tile-Kante, und es entstehen keine Haarlinien-Lücken zwischen Tiles.
  */
-function diamondRowSpan(row: number, w: number, h: number): [number, number] {
-  const halfH = h / 2;
-  const k = row < halfH ? row : h - 1 - row;
-  const inset = Math.round((w / 2) * (1 - (k + 1) / halfH));
-  return [inset, w - inset];
-}
-
 function createBiomeTileset(scene: Phaser.Scene, w: number, h: number): void {
   const width = TILESET_MARGIN * 2 + BIOM_COUNT * w + (BIOM_COUNT - 1) * TILESET_SPACING;
   const height = TILESET_MARGIN * 2 + h;
@@ -60,20 +53,16 @@ function createBiomeTileset(scene: Phaser.Scene, w: number, h: number): void {
     const oy = TILESET_MARGIN;
 
     ctx.fillStyle = biomColorCss(biom);
-    for (let row = 0; row < h; row++) {
-      const [a, b] = diamondRowSpan(row, w, h);
-      ctx.fillRect(ox + a, oy + row, b - a, 1);
-    }
+    ctx.fillRect(ox - 1, oy - 1, w + 2, h + 2);
 
     drawBiomeDetail(ctx, biom, ox, oy, w, h);
 
-    // Dezente Kante (je 2 px pro Zeilenende) -> das Gitter bleibt lesbar.
-    ctx.fillStyle = "rgba(0,0,0,0.14)";
-    for (let row = 0; row < h; row++) {
-      const [a, b] = diamondRowSpan(row, w, h);
-      ctx.fillRect(ox + a, oy + row, 2, 1);
-      ctx.fillRect(ox + b - 2, oy + row, 2, 1);
-    }
+    // Dezente Kante unten/rechts -> das Gitter bleibt lesbar, die untere Kante betont die
+    // Schrägansicht leicht.
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    ctx.fillRect(ox, oy + h - 2, w, 2);
+    ctx.fillStyle = "rgba(0,0,0,0.07)";
+    ctx.fillRect(ox + w - 1, oy, 1, h - 2);
   }
   tex.refresh();
 }
@@ -92,12 +81,8 @@ function drawBiomeDetail(
   const speckle = (count: number, color: string, sw: number, sh: number) => {
     ctx.fillStyle = color;
     for (let i = 0; i < count; i++) {
-      let px: number;
-      let py: number;
-      do {
-        px = rnd() * 2 - 1;
-        py = rnd() * 2 - 1;
-      } while (Math.abs(px) + Math.abs(py) > 0.62);
+      const px = (rnd() * 2 - 1) * 0.8;
+      const py = (rnd() * 2 - 1) * 0.75;
       ctx.fillRect(Math.round(ox + w / 2 + (px * w) / 2 - sw / 2), Math.round(oy + h / 2 + (py * h) / 2 - sh / 2), sw, sh);
     }
   };
@@ -182,7 +167,7 @@ function createCreatureTexture(scene: Phaser.Scene): void {
   tex.refresh();
 }
 
-/** Markierungsring unter dem eigenen Spieler (in Kachelproportion 2:1). */
+/** Markierungsring unter dem eigenen Spieler (flache Ellipse, passend zur Schrägansicht). */
 function createRingTexture(scene: Phaser.Scene): void {
   const tex = scene.textures.createCanvas(TEXTURES.ring, 44, 22);
   if (!tex) throw new Error("Konnte Ring-Textur nicht anlegen.");

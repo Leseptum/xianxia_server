@@ -1,6 +1,6 @@
 // Übernommen aus web_client/src/config.ts: deriveServerUri/SERVER_URI/DATABASE_NAME/
 // STEP_INTERVAL_MS sind unverändert, nur die Top-Down-Render-Konstanten des Testclients
-// (TILE_SIZE/HUD_HEIGHT/MAP_MARGIN) sind durch die Iso-/Phaser-Konstanten unten ersetzt.
+// (TILE_SIZE/HUD_HEIGHT/MAP_MARGIN) sind durch die Projektions-/Phaser-Konstanten unten ersetzt.
 //
 // Server/DB are chosen via URL query params, e.g.
 //   index.html?server=wss://maincloud.spacetimedb.com&db=xianxia
@@ -35,9 +35,9 @@ export const CONFIG = {
   DATABASE_NAME: params.get("db") || "xianxia",
   STEP_INTERVAL_MS: 150, // Zeit zwischen zwei Feld-Schritten bei gehaltener Taste (wie web_client)
 
-  // Diamond-Isometrie, 2:1 - siehe src/logic/iso.ts für die Projektion.
+  // Schrägansicht, nicht gedreht: Kacheln vertikal gestaucht - siehe src/logic/projection.ts.
   TILE_WIDTH: 64,
-  TILE_HEIGHT: 32,
+  TILE_HEIGHT: 40,
 
   // Interpolation zwischen Positionsupdates (src/logic/interpolation.ts).
   // Spieler laufen im STEP_INTERVAL_MS-Takt -> gleiche Dauer ergibt eine durchgehende

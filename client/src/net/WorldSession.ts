@@ -1,7 +1,7 @@
 import type { DbConnection } from "../module_bindings";
 import type { Npc as NpcRow, Player as PlayerRow, WorldTile as WorldTileRow } from "../module_bindings/types";
 import type { WorldGrid } from "../world";
-import type { Point } from "../logic/iso";
+import type { Point } from "../logic/projection";
 import { isWalkableBiom, PredictedPosition, type Direction } from "../logic/movement";
 import { nearestInRange } from "../logic/combat";
 import { Emitter } from "./emitter";

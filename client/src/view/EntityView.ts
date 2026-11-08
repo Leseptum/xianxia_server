@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import { InterpolatedPosition } from "../logic/interpolation";
-import { tileToWorld, type IsoMetrics, type Point } from "../logic/iso";
+import { tileToWorld, type TileMetrics, type Point } from "../logic/projection";
 import { FEET_ORIGIN, TEXTURES } from "./textures";
 
 // Tiefensortierung nach Y: Figuren bekommen als Depth die Welt-Y ihres Fußpunkts (weiter unten
@@ -40,7 +40,7 @@ export class EntityView {
 
   constructor(
     scene: Phaser.Scene,
-    private readonly metrics: IsoMetrics,
+    private readonly metrics: TileMetrics,
     x: number,
     y: number,
     style: EntityStyle,

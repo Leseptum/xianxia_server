@@ -5,14 +5,14 @@ Ein 2D Multiplayer-RPG im Xianxia/Kultivierungs-Stil.
 ## Tech Stack
 
 - **Backend:** SpacetimeDB (C# Modul, `spacetimedb/`)
-- **Spielclient:** `client/` — Phaser 3 + TypeScript (Vite, offizielles `spacetimedb`-SDK), isometrische Darstellung, siehe `client/README.md`. Ein Godot-Client ist nicht (mehr) geplant.
+- **Spielclient:** `client/` — Phaser 3 + TypeScript (Vite, offizielles `spacetimedb`-SDK), Schrägansicht von oben (Norden = oben), siehe `client/README.md`. Ein Godot-Client ist nicht (mehr) geplant.
 - **Testclient & Karteneditor:** `web_client/` — älterer TypeScript-Testclient (Top-Down, ohne Phaser) zum schnellen Ausprobieren der Reducer/Tabellen, plus der Karteneditor `web_client/editor.html`, siehe `web_client/README.md`.
 - **Welt:** 256×256 Tilemap, Perlin-Noise-generiert, 6 Biome
 
 ## Features
 
 - Multiplayer über SpacetimeDB — Positions-Updates laufen live über WebSocket-Subscriptions (offizielles SDK, kein Polling), im Spielclient mit Interpolation zwischen den Updates
-- Isometrische Weltkarte (Phaser-Tilemap), Kamera folgt dem Spieler, Zoom per Mausrad
+- Weltkarte in Schrägansicht von oben (Phaser-Tilemap, Figuren nach Tiefe sortiert), Kamera folgt dem Spieler, Zoom per Mausrad
 - Prozedural generierte Welt (Wasser, Strand, Ebene, Wald, Berg, Schnee)
 - Qi-Kultivierungssystem mit Durchbruch-Mechanik
 - Login & Registrierung mit SHA256-Passwort-Hashing

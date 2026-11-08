@@ -1,5 +1,5 @@
 import { BIOM } from "../world";
-import type { Point } from "./iso";
+import type { Point } from "./projection";
 
 export interface Direction {
   dx: number;
@@ -15,10 +15,9 @@ export interface DirectionKeys {
 
 /**
  * Taste -> Gitterrichtung, identisch zum web_client (W/↑ = y-1, S/↓ = y+1, A/← = x-1,
- * D/→ = x+1; else-if-Kette, also nur eine Achse pro Schritt, keine Diagonalen). Durch die
- * Iso-Projektion (logic/iso.ts) erscheinen diese Gitterachsen auf dem Bildschirm diagonal:
- * W = rechts oben, D = rechts unten, S = links unten, A = links oben. Dieselbe Taste bewegt in
- * beiden Clients also in dieselbe Gitter-/Himmelsrichtung.
+ * D/→ = x+1; else-if-Kette, also nur eine Achse pro Schritt, keine Diagonalen). Die Ansicht
+ * ist nicht gedreht (logic/projection.ts): W = oben, S = unten, A = links, D = rechts - in
+ * beiden Clients dieselbe Gitter-/Himmelsrichtung.
  */
 export function directionFromKeys(keys: DirectionKeys): Direction | null {
   if (keys.left) return { dx: -1, dy: 0 };
