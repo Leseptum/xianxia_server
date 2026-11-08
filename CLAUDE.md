@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Xianxia is a 2D cultivation-themed multiplayer RPG. The backend is a SpacetimeDB module (C#). The **actual game client is `client/`** — Phaser 3 + TypeScript (Vite + the official `spacetimedb` SDK), isometric rendering; see "Game client architecture" below and `client/README.md`. New gameplay UI/features go there. The previously planned Godot client is **dropped** — there is no Godot project and none is planned; ignore any remaining Godot mentions (e.g. in `web_client/README.md`, which was deliberately left untouched when `client/` was added).
+Xianxia is a 2D cultivation-themed multiplayer RPG. The backend is a SpacetimeDB module (C#). The **actual game client is `client/`** — Phaser 3 + TypeScript (Vite + the official `spacetimedb` SDK), isometric rendering; see "Game client architecture" below and `client/README.md`. New gameplay UI/features go there. The previously planned Godot client is **dropped** — there is no Godot project and none is planned.
 
 `web_client/` is the older top-down TypeScript **proof-of-concept / test tool** (login, world map, Qi, movement, NPC attack) and hosts the **map editor** (`web_client/editor.html`) — keep it working, but it's no longer where the game itself evolves. Both clients talk to the same module and must keep working against it.
 
