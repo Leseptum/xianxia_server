@@ -1,0 +1,107 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0a0f;
+  color: #dcdcdc;
+  font-family: system-ui, sans-serif;
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+}
+
+/* ---- Login-Formular (DOMElement der LoginScene) ---- */
+
+.login-panel {
+  box-sizing: border-box;
+  width: min(340px, calc(100vw - 32px));
+  padding: 24px 24px 16px;
+  background: #14141e;
+  border: 1px solid #32323c;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-panel h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  text-align: center;
+  color: #ffd23c;
+  letter-spacing: 0.06em;
+}
+
+.login-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #a0a0aa;
+}
+
+.login-panel input {
+  padding: 8px 10px;
+  font-size: 15px;
+  color: #f0f0f0;
+  background: #1e1e2a;
+  border: 1px solid #3c3c4a;
+  border-radius: 4px;
+}
+
+.login-panel input:focus {
+  outline: 2px solid #6ec8ff;
+  outline-offset: -1px;
+}
+
+.login-panel .button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.login-panel .button-row button {
+  flex: 1;
+  padding: 9px 0;
+  font-size: 15px;
+  color: #f0f0f0;
+  background: #2f6f4f;
+  border: 1px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-panel .button-row button[name="register"] {
+  background: #3a3a4a;
+}
+
+.login-panel button:disabled,
+.login-panel input:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.login-panel .status {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 13px;
+  color: #96e696;
+}
+
+.login-panel .status.error {
+  color: #e67878;
+}
+
+.login-panel .link-button {
+  align-self: center;
+  padding: 0;
+  font-size: 12px;
+  color: #8c8c96;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}

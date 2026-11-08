@@ -6,15 +6,16 @@ live sehen. Nutzt das offizielle `spacetimedb`-SDK (echte WebSocket-Verbindung
 mit Subscriptions statt Polling) über Vite gebaut — `npm install` + Build-Schritt
 nötig, siehe unten (früher: reines Build-Schritt-loses HTML/CSS/JS).
 
-**Kein Ersatz für den echten Godot-Client**, nur ein Werkzeug zum Testen der
-Reducer/Tabellen ohne Godot.
+**Nicht der Spielclient** — der eigentliche Spielclient ist `client/` (Phaser 3,
+isometrisch, siehe `../client/README.md`). Dieser Testclient bleibt als Werkzeug zum
+schnellen Testen der Reducer/Tabellen und als Heimat des Karteneditors
+(`editor.html`) bestehen.
 
 ## Server starten (separates Terminal)
 
 ```bash
-cd ../spacetimedb
 spacetime start
-spacetime publish --server local xianxia
+scripts/publish.sh local     # aus dem Repo-Root; setzt danach auch das Editor-Passwort
 ```
 
 ## Client starten
